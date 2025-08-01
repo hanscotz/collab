@@ -1,0 +1,220 @@
+<%- include('../partials/header', { 
+    title: `${userToShow.name} - User Details - Dr. Salmin Amour Sec. School`,
+    breadcrumbs: [
+        { text: 'User Management', url: '/users' },
+        { text: userToShow.name }
+    ]
+}) %>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- User Profile -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user me-2"></i>User Profile
+                </h4>
+                <div>
+                    <a href="/users/edit/<%= userToShow.id %>" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-edit me-2"></i>Edit User
+                    </a>
+                    <% if (userToShow.id !== user.id) { %>
+                    <form method="POST" action="/users/delete/<%= userToShow.id %>" 
+                          style="display: inline;" 
+                          onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-trash me-2"></i>Delete User
+                        </button>
+                    </form>
+                    <% } %>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                        <h5><%= userToShow.name %></h5>
+                        <% if (userToShow.role === 'admin') { %>
+                            <span class="badge bg-danger"><%= userToShow.role %></span>
+                        <% } else if (userToShow.role === 'teacher') { %>
+                            <span class="badge bg-primary"><%= userToShow.role %></span>
+                        <% } else { %>
+                            <span class="badge bg-success"><%= userToShow.role %></span>
+                        <% } %>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <strong>Email:</strong><br>
+                                    <a href="mailto:<%= userToShow.email %>"><%= userToShow.email %></a>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>User ID:</strong><br>
+                                    <%= userToShow.id %>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Member Since:</strong><br>
+                                    <%= new Date(userToShow.created_at).toLocaleDateString() %>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <strong>Last Updated:</strong><br>
+                                    <%= userToShow.updated_at ? new Date(userToShow.updated_at).toLocaleDateString() : 'Never' %>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Status:</strong><br>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Activity -->
+        <div class="row">
+            <!-- Posts -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bullhorn me-2"></i>Posts (<%= posts.length %>)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (posts.length > 0) { %>
+                            <% posts.slice(0, 5).forEach(post => { %>
+                            <div class="mb-3 pb-3 border-bottom">
+                                <h6 class="mb-1">
+                                    <a href="/posts/<%= post.id %>" class="text-decoration-none">
+                                        <%= post.title %>
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <%= new Date(post.created_at).toLocaleDateString() %>
+                                </small>
+                                <br>
+                                <span class="badge badge-<%= post.category %>">
+                                    <%= post.category.charAt(0).toUpperCase() + post.category.slice(1) %>
+                                </span>
+                            </div>
+                            <% }); %>
+                            <% if (posts.length > 5) { %>
+                            <div class="text-center">
+                                <small class="text-muted">... and <%= posts.length - 5 %> more posts</small>
+                            </div>
+                            <% } %>
+                        <% } else { %>
+                            <p class="text-muted text-center">No posts yet</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>Comments (<%= comments.length %>)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (comments.length > 0) { %>
+                            <% comments.slice(0, 5).forEach(comment => { %>
+                            <div class="mb-3 pb-3 border-bottom">
+                                <p class="mb-1">
+                                    <%= comment.content.length > 100 ? comment.content.substring(0, 100) + '...' : comment.content %>
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <%= new Date(comment.created_at).toLocaleDateString() %>
+                                </small>
+                            </div>
+                            <% }); %>
+                            <% if (comments.length > 5) { %>
+                            <div class="text-center">
+                                <small class="text-muted">... and <%= comments.length - 5 %> more comments</small>
+                            </div>
+                            <% } %>
+                        <% } else { %>
+                            <p class="text-muted text-center">No comments yet</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/users/edit/<%= userToShow.id %>" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Edit User
+                    </a>
+                    <a href="mailto:<%= userToShow.email %>" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Send Email
+                    </a>
+                    <a href="/messages/new" class="btn btn-outline-info">
+                        <i class="fas fa-comments me-2"></i>Send Message
+                    </a>
+                    <a href="/users" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Activity Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-primary"><%= posts.length %></h4>
+                            <small class="text-muted">Posts</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-info"><%= comments.length %></h4>
+                            <small class="text-muted">Comments</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-success"><%= messages.length %></h4>
+                            <small class="text-muted">Messages</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-warning">
+                                <%= Math.floor((new Date() - new Date(userToShow.created_at)) / (1000 * 60 * 60 * 24)) %>
+                            </h4>
+                            <small class="text-muted">Days Active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

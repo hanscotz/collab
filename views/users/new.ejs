@@ -1,0 +1,129 @@
+<%- include('../partials/header', { 
+    title: 'Create New User - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'User Management', url: '/users' },
+        { text: 'Create User' }
+    ]
+}) %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Create New User
+                </h4>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+                <% } %>
+                
+                <form method="POST" action="/users/new">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                                </div>
+                                <small class="form-text text-muted">Minimum 6 characters</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Role *</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Select role</option>
+                                    <option value="parent" selected>Parent</option>
+                                    <option value="teacher">Teacher</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                                <small class="form-text text-muted">Choose the appropriate role for this user</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="/users" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Role Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Role Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-user-friends fa-2x text-success mb-2"></i>
+                            <h6>Parent <span class="badge bg-success">Default</span></h6>
+                            <small class="text-muted">
+                                View posts, add comments, send messages
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-primary mb-2"></i>
+                            <h6>Teacher</h6>
+                            <small class="text-muted">
+                                Create posts, manage comments, send messages
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-user-shield fa-2x text-danger mb-2"></i>
+                            <h6>Administrator</h6>
+                            <small class="text-muted">
+                                Full system access, user management, all features
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

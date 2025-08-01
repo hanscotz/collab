@@ -1,0 +1,107 @@
+<%- include('../partials/header', { 
+    title: 'Contact Us - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [{ text: 'Contact' }]
+}) %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>Contact the School
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Get in Touch
+                        </h5>
+                        <p class="text-muted">
+                            Have a question or concern? We're here to help! Send us a message and we'll get back to you as soon as possible.
+                        </p>
+                        
+                        <div class="mt-4">
+                            <h6><i class="fas fa-clock me-2"></i>Response Time</h6>
+                            <p class="text-muted">We typically respond within 24-48 hours during school days.</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6><i class="fas fa-shield-alt me-2"></i>Privacy</h6>
+                            <p class="text-muted">Your information is kept confidential and will only be used to respond to your inquiry.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <form method="POST" action="/contact">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="<%= isAuthenticated ? user.name : '' %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="<%= isAuthenticated ? user.email : '' %>" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <select class="form-select" id="subject" name="subject" required>
+                                    <option value="">Select a subject</option>
+                                    <option value="General Inquiry">General Inquiry</option>
+                                    <option value="Academic Question">Academic Question</option>
+                                    <option value="Attendance Issue">Attendance Issue</option>
+                                    <option value="Behavioral Concern">Behavioral Concern</option>
+                                    <option value="Technical Support">Technical Support</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message *</label>
+                                <textarea class="form-control" id="message" name="message" rows="5" 
+                                          placeholder="Please provide details about your inquiry..." required></textarea>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-address-book me-2"></i>School Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-phone fa-2x text-primary mb-2"></i>
+                        <h6>Phone</h6>
+                        <p class="text-muted">(555) 123-4567</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                        <h6>Email</h6>
+                        <p class="text-muted">info@school.edu</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-map-marker-alt fa-2x text-primary mb-2"></i>
+                        <h6>Address</h6>
+                        <p class="text-muted">123 Education St.<br>Learning City, LC 12345</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

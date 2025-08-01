@@ -1,0 +1,111 @@
+<%- include('../partials/header', { 
+    title: 'New Message - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'Messages', url: '/messages' },
+        { text: 'New Message' }
+    ]
+}) %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-paper-plane me-2"></i>Start New Conversation
+                </h4>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+                <% } %>
+                
+                <form method="POST" action="/messages/new">
+                    <div class="mb-3">
+                        <label for="receiver_id" class="form-label">Send to *</label>
+                        <select class="form-select" id="receiver_id" name="receiver_id" required>
+                            <option value="">Select a user to message</option>
+                            <% users.forEach(user => { %>
+                            <option value="<%= user.id %>">
+                                <%= user.name %> (<%= user.email %>) - <%= user.role %>
+                            </option>
+                            <% }); %>
+                        </select>
+                        <small class="form-text text-muted">
+                            Choose the person you want to start a conversation with
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject *</label>
+                        <input type="text" class="form-control" id="subject" name="subject" required 
+                               placeholder="Enter message subject">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message *</label>
+                        <textarea class="form-control" id="message" name="message" rows="8" required 
+                                  placeholder="Type your message here..."></textarea>
+                        <small class="form-text text-muted">
+                            Be clear and respectful in your message
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="/messages" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Available Users -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Available Users
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (users.length === 0) { %>
+                <p class="text-muted">No other users available to message.</p>
+                <% } else { %>
+                <div class="row">
+                    <% users.forEach(user => { %>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">
+                                        <i class="fas fa-user-circle fa-2x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1"><%= user.name %></h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-envelope me-1"></i><%= user.email %>
+                                        </small>
+                                        <br>
+                                        <% if (user.role === 'admin') { %>
+                                            <span class="badge bg-danger"><%= user.role %></span>
+                                        <% } else if (user.role === 'teacher') { %>
+                                            <span class="badge bg-primary"><%= user.role %></span>
+                                        <% } else { %>
+                                            <span class="badge bg-success"><%= user.role %></span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div> 

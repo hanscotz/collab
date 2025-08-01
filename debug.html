@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Style Check</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #28a745;
+            --secondary-green: #20c997;
+            --light-green: #d4edda;
+            --dark-green: #155724;
+            --accent-green: #198754;
+            --pure-white: #ffffff;
+            --off-white: #f8f9fa;
+            --light-gray: #e9ecef;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--pure-white) 0%, var(--light-green) 50%, var(--off-white) 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .debug-card {
+            background: var(--pure-white);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--light-green);
+        }
+        
+        .status-good {
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+        
+        .status-bad {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-bug text-success"></i> 
+                    Style Debug Page
+                </h1>
+                
+                <div class="debug-card">
+                    <h3>External Resources Check</h3>
+                    <div id="bootstrap-status" class="mb-2">
+                        <i class="fas fa-spinner fa-spin"></i> Checking Bootstrap...
+                    </div>
+                    <div id="fontawesome-status" class="mb-2">
+                        <i class="fas fa-spinner fa-spin"></i> Checking Font Awesome...
+                    </div>
+                </div>
+                
+                <div class="debug-card">
+                    <h3>Color Variables Test</h3>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div style="background: var(--primary-green); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                                Primary Green
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="background: var(--secondary-green); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                                Secondary Green
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="background: var(--light-green); color: var(--dark-green); padding: 1rem; border-radius: 8px; text-align: center;">
+                                Light Green
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="background: var(--dark-green); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                                Dark Green
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="debug-card">
+                    <h3>Button Tests</h3>
+                    <button class="btn btn-success me-2">Success Button</button>
+                    <button class="btn btn-primary me-2">Primary Button</button>
+                    <button class="btn btn-outline-success me-2">Outline Success</button>
+                    <button class="btn btn-outline-primary me-2">Outline Primary</button>
+                </div>
+                
+                <div class="debug-card">
+                    <h3>Navigation Test</h3>
+                    <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));">
+                        <div class="container-fluid">
+                            <a class="navbar-brand text-white" href="#">Test Navbar</a>
+                            <div class="navbar-nav">
+                                <a class="nav-link text-white" href="#">Home</a>
+                                <a class="nav-link text-white" href="#">About</a>
+                                <a class="nav-link text-white" href="#">Contact</a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                
+                <div class="debug-card">
+                    <h3>Links to Test</h3>
+                    <a href="http://localhost:3000" class="btn btn-success me-2">
+                        <i class="fas fa-home"></i> Main App
+                    </a>
+                    <a href="test-styles.html" class="btn btn-outline-success me-2">
+                        <i class="fas fa-palette"></i> Style Test
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check if Bootstrap is loaded
+        setTimeout(() => {
+            const bootstrapStatus = document.getElementById('bootstrap-status');
+            if (typeof bootstrap !== 'undefined') {
+                bootstrapStatus.innerHTML = '<i class="fas fa-check status-good"></i> Bootstrap loaded successfully';
+            } else {
+                bootstrapStatus.innerHTML = '<i class="fas fa-times status-bad"></i> Bootstrap failed to load';
+            }
+        }, 1000);
+        
+        // Check if Font Awesome is loaded
+        setTimeout(() => {
+            const fontawesomeStatus = document.getElementById('fontawesome-status');
+            const testIcon = document.querySelector('.fas.fa-check');
+            if (testIcon && getComputedStyle(testIcon, '::before').content !== 'none') {
+                fontawesomeStatus.innerHTML = '<i class="fas fa-check status-good"></i> Font Awesome loaded successfully';
+            } else {
+                fontawesomeStatus.innerHTML = '<i class="fas fa-times status-bad"></i> Font Awesome failed to load';
+            }
+        }, 1000);
+    </script>
+</body>
+</html> 

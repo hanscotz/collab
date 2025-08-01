@@ -1,0 +1,161 @@
+<%- include('../partials/header', { 
+    title: 'Contact Messages - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'Contact', url: '/contact' },
+        { text: 'Messages' }
+    ]
+}) %>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-inbox me-2"></i>Contact Messages
+                </h4>
+                <div class="btn-group" role="group">
+                    <a href="/contact/messages?status=all" 
+                       class="btn btn-outline-primary <%= currentStatus === 'all' ? 'active' : '' %>">
+                        All
+                    </a>
+                    <a href="/contact/messages?status=unread" 
+                       class="btn btn-outline-warning <%= currentStatus === 'unread' ? 'active' : '' %>">
+                        Unread
+                    </a>
+                    <a href="/contact/messages?status=read" 
+                       class="btn btn-outline-info <%= currentStatus === 'read' ? 'active' : '' %>">
+                        Read
+                    </a>
+                    <a href="/contact/messages?status=replied" 
+                       class="btn btn-outline-success <%= currentStatus === 'replied' ? 'active' : '' %>">
+                        Replied
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <% if (messages.length === 0) { %>
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No messages found</h5>
+                    <p class="text-muted">There are no contact messages matching your current filter.</p>
+                </div>
+                <% } else { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>From</th>
+                                <th>Subject</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% messages.forEach(message => { %>
+                            <tr class="<%= message.status === 'unread' ? 'table-warning' : '' %>">
+                                <td>
+                                    <% if (message.status === 'unread') { %>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-envelope me-1"></i>Unread
+                                        </span>
+                                    <% } else if (message.status === 'read') { %>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-envelope-open me-1"></i>Read
+                                        </span>
+                                    <% } else if (message.status === 'replied') { %>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-reply me-1"></i>Replied
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong><%= message.name %></strong>
+                                        <br>
+                                        <small class="text-muted"><%= message.email %></small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="/contact/messages/<%= message.id %>" class="text-decoration-none">
+                                        <%= message.subject %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <%= new Date(message.created_at).toLocaleDateString() %>
+                                        <br>
+                                        <%= new Date(message.created_at).toLocaleTimeString() %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="/contact/messages/<%= message.id %>" 
+                                           class="btn btn-outline-primary" title="View Message">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <form method="POST" action="/contact/messages/<%= message.id %>/delete" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to delete this message?')">
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete Message">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-inbox fa-2x mb-2"></i>
+                <h5 class="card-title">
+                    <%= messages.filter(m => m.status === 'unread').length %>
+                </h5>
+                <p class="card-text">Unread Messages</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-envelope-open fa-2x mb-2"></i>
+                <h5 class="card-title">
+                    <%= messages.filter(m => m.status === 'read').length %>
+                </h5>
+                <p class="card-text">Read Messages</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-reply fa-2x mb-2"></i>
+                <h5 class="card-title">
+                    <%= messages.filter(m => m.status === 'replied').length %>
+                </h5>
+                <p class="card-text">Replied Messages</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                <h5 class="card-title"><%= messages.length %></h5>
+                <p class="card-text">Total Messages</p>
+            </div>
+        </div>
+    </div>
+</div> 

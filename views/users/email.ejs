@@ -1,0 +1,198 @@
+<%- include('../partials/header', { 
+    title: 'Send Email to Users - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'User Management', url: '/users' },
+        { text: 'Send Email' }
+    ]
+}) %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>Send Email to Users
+                </h4>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+                <% } %>
+
+                <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i><%= success %>
+                </div>
+                <% } %>
+                
+                <form method="POST" action="/users/email">
+                    <div class="mb-3">
+                        <label for="recipients" class="form-label">Recipients *</label>
+                        <select class="form-select" id="recipients" name="recipients" multiple required>
+                            <% users.forEach(user => { %>
+                            <option value="<%= user.id %>">
+                                <%= user.name %> (<%= user.email %>) - <%= user.role %>
+                            </option>
+                            <% }); %>
+                        </select>
+                        <small class="form-text text-muted">
+                            Hold Ctrl (or Cmd on Mac) to select multiple users
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject *</label>
+                        <input type="text" class="form-control" id="subject" name="subject" 
+                               placeholder="Enter email subject..." required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message *</label>
+                        <textarea class="form-control" id="message" name="message" rows="10" 
+                                  placeholder="Write your email message here..." required></textarea>
+                        <small class="form-text text-muted">
+                            You can use HTML formatting in your message
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="/users" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Send Email
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Email Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Email Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Keep subject lines clear and concise</li>
+                    <li>Use professional and respectful language</li>
+                    <li>Include important information in the first paragraph</li>
+                    <li>Use HTML formatting for better readability</li>
+                    <li>Test your email content before sending to multiple users</li>
+                    <li>Consider the time zone of your recipients</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Recipient Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Available Recipients
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-primary">
+                                <%= users.filter(u => u.role === 'admin').length %>
+                            </h4>
+                            <small class="text-muted">Admins</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-info">
+                                <%= users.filter(u => u.role === 'teacher').length %>
+                            </h4>
+                            <small class="text-muted">Teachers</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-success">
+                                <%= users.filter(u => u.role === 'parent').length %>
+                            </h4>
+                            <small class="text-muted">Parents</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <h4 class="text-secondary">
+                                <%= users.length %>
+                            </h4>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="selectAll()">
+                        <i class="fas fa-check-square me-2"></i>Select All
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="selectAdmins()">
+                        <i class="fas fa-user-shield me-2"></i>Select Admins
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="selectTeachers()">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>Select Teachers
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="selectParents()">
+                        <i class="fas fa-user-friends me-2"></i>Select Parents
+                    </button>
+                    <a href="/users" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectAll() {
+    const select = document.getElementById('recipients');
+    for (let option of select.options) {
+        option.selected = true;
+    }
+}
+
+function selectAdmins() {
+    const select = document.getElementById('recipients');
+    for (let option of select.options) {
+        option.selected = option.text.includes('admin');
+    }
+}
+
+function selectTeachers() {
+    const select = document.getElementById('recipients');
+    for (let option of select.options) {
+        option.selected = option.text.includes('teacher');
+    }
+}
+
+function selectParents() {
+    const select = document.getElementById('recipients');
+    for (let option of select.options) {
+        option.selected = option.text.includes('parent');
+    }
+}
+</script> 

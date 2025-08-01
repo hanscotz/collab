@@ -1,0 +1,74 @@
+<%- include('../partials/header', { 
+    title: 'Edit Comment - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'Announcements', url: '/posts' },
+        { text: comment.post_title, url: `/posts/${comment.post_id}` },
+        { text: 'Edit Comment' }
+    ]
+}) %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>Edit Comment
+                </h4>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+                <% } %>
+                
+                <div class="mb-3">
+                    <label class="form-label">Post:</label>
+                    <div class="form-control-plaintext">
+                        <a href="/posts/<%= comment.post_id %>" class="text-decoration-none">
+                            <i class="fas fa-file-alt me-2"></i><%= comment.post_title %>
+                        </a>
+                    </div>
+                </div>
+                
+                <form method="POST" action="/comments/<%= comment.id %>/edit">
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Comment Content *</label>
+                        <textarea class="form-control" id="content" name="content" rows="6" 
+                                  placeholder="Write your comment here..." required><%= comment.content %></textarea>
+                        <small class="form-text text-muted">
+                            Be respectful and constructive in your comment
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="/posts/<%= comment.post_id %>" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Comment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Comment Guidelines -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Comment Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Be respectful and constructive</li>
+                    <li>Stay on topic and relevant to the post</li>
+                    <li>Avoid personal attacks or offensive language</li>
+                    <li>Use clear and concise language</li>
+                    <li>Respect different viewpoints and opinions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div> 

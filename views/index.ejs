@@ -1,0 +1,170 @@
+<%- include('partials/header', { title: 'Home - Dr. Salmin Amour Sec. School' }) %>
+
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="card border-0">
+        <div class="card-body text-center py-5">
+            <div class="hero-icon mb-4">
+                <i class="fas fa-school"></i>
+            </div>
+            <h1 class="display-3 text-success mb-3 fw-bold">
+                Welcome to Dr. Salmin Amour Sec. School
+            </h1>
+            <p class="lead mb-4 fs-5 text-muted">Stay connected with your child's education through our collaborative platform.</p>
+            
+            <% if (!isAuthenticated) { %>
+            <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                <a href="/auth/login" class="btn btn-success btn-lg px-4 py-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                <a href="/auth/register" class="btn btn-outline-success btn-lg px-4 py-3">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </a>
+            </div>
+            <% } else { %>
+            <div class="welcome-alert">
+                <div class="alert alert-info border-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Welcome back, <strong><%= user.name %></strong>! You're logged in as a <strong><%= user.role %></strong>.
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <div class="feature-card text-center">
+            <div class="feature-icon mb-3">
+                <i class="fas fa-bullhorn"></i>
+            </div>
+            <h4>Stay Informed</h4>
+            <p class="text-muted">Get real-time updates on school announcements, events, and important information.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="feature-card text-center">
+            <div class="feature-icon mb-3">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h4>Engage & Connect</h4>
+            <p class="text-muted">Comment on posts and engage in meaningful discussions with the school community.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="feature-card text-center">
+            <div class="feature-icon mb-3">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <h4>Direct Communication</h4>
+            <p class="text-muted">Contact school staff directly through our secure messaging system.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+
+        <h2 class="mb-4">
+            <i class="fas fa-bullhorn me-2"></i>Latest Announcements
+        </h2>
+        
+        <% if (posts && posts.length > 0) { %>
+            <% posts.forEach(post => { %>
+            <div class="card mb-4 post-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge badge-<%= post.category %> me-2">
+                            <%= post.category.charAt(0).toUpperCase() + post.category.slice(1) %>
+                        </span>
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i><%= post.author_name %>
+                        </small>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        <%= new Date(post.created_at).toLocaleDateString() %>
+                    </small>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <a href="/posts/<%= post.id %>" class="text-decoration-none">
+                            <%= post.title %>
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted mb-3">
+                        <%= post.content.length > 150 ? post.content.substring(0, 150) + '...' : post.content %>
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-comments me-1"></i><%= post.comment_count %> comments
+                        </small>
+                        <a href="/posts/<%= post.id %>" class="btn btn-outline-success">
+                            Read More <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+            
+            <div class="text-center mt-4">
+                <a href="/posts" class="btn btn-success">
+                    <i class="fas fa-list me-2"></i>View All Announcements
+                </a>
+            </div>
+        <% } else { %>
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5>No announcements yet</h5>
+                    <p class="text-muted">Check back later for updates from the school.</p>
+                </div>
+            </div>
+        <% } %>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Quick Links
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="/posts" class="list-group-item list-group-item-action">
+                        <i class="fas fa-bullhorn me-2"></i>View All Announcements
+                    </a>
+
+                    <% if (user && user.role === 'admin') { %>
+                    <a href="/posts/new" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus me-2"></i>Create New Post
+                    </a>
+
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>About This Platform
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Parent-School Hub is designed to facilitate better communication between parents and school staff. 
+                    Stay updated with announcements, events, and important information.
+                </p>
+                <div class="d-grid">
+                    <a href="/about" class="btn btn-outline-success">
+                        <i class="fas fa-info me-2"></i>Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

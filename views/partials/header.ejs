@@ -1,0 +1,19 @@
+<% if (typeof title !== 'undefined') { %>
+<div class="mb-4">
+    <h1 class="h2 mb-0"><%= title %></h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <% if (typeof breadcrumbs !== 'undefined') { %>
+                <% breadcrumbs.forEach(breadcrumb => { %>
+                    <% if (breadcrumb.url) { %>
+                        <li class="breadcrumb-item"><a href="<%= breadcrumb.url %>"><%= breadcrumb.text %></a></li>
+                    <% } else { %>
+                        <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.text %></li>
+                    <% } %>
+                <% }); %>
+            <% } %>
+        </ol>
+    </nav>
+</div>
+<% } %> 

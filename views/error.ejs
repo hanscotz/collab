@@ -1,0 +1,23 @@
+<%- include('partials/header', { title: 'Error - Dr. Salmin Amour Sec. School' }) %>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                <h2 class="card-title">Oops! Something went wrong</h2>
+                <p class="card-text text-muted">
+                    <%= typeof message !== 'undefined' ? message : 'An unexpected error occurred. Please try again.' %>
+                </p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Go Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

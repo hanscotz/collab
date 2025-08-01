@@ -1,0 +1,335 @@
+/* Dr. Salmin Amour Sec. School - Custom Styles */
+
+:root {
+    --primary-green: #28a745;
+    --secondary-green: #20c997;
+    --dark-green: #1e7e34;
+    --light-green: #d4edda;
+    --success-green: #155724;
+    --hover-green: #218838;
+}
+
+/* Custom animations */
+@keyframes slideInUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    to { 
+        transform: rotate(360deg); 
+    }
+}
+
+/* Animation classes */
+.slide-in-up {
+    animation: slideInUp 0.6s ease-out;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+/* Enhanced focus states */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-green);
+}
+
+/* Card hover effects */
+.card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.15);
+    border-color: var(--primary-green);
+}
+
+/* Button enhancements */
+.btn-success {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: var(--hover-green);
+    border-color: var(--hover-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-outline-success {
+    color: var(--primary-green);
+    border-color: var(--primary-green);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Navbar enhancements */
+.navbar-brand {
+    font-weight: bold;
+    color: var(--primary-green) !important;
+    transition: color 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: var(--dark-green) !important;
+}
+
+.nav-link {
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--primary-green) !important;
+}
+
+/* Alert enhancements */
+.alert-success {
+    background-color: var(--light-green);
+    border-color: var(--primary-green);
+    color: var(--success-green);
+}
+
+/* Badge enhancements */
+.badge.bg-success {
+    background-color: var(--primary-green) !important;
+}
+
+.badge.bg-primary {
+    background-color: var(--secondary-green) !important;
+}
+
+/* Form enhancements */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Table enhancements */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table thead th {
+    background-color: var(--primary-green);
+    color: white;
+    border: none;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+/* Message bubbles for chat */
+.message-bubble {
+    max-width: 70%;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message-sent {
+    background-color: var(--primary-green);
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+.message-received {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+
+/* Hero section enhancements */
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Feature cards */
+.feature-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
+    border-color: var(--primary-green);
+}
+
+.feature-card i {
+    font-size: 3rem;
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+}
+
+/* Footer enhancements */
+.footer {
+    background-color: #343a40;
+    color: white;
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+
+.footer a {
+    color: var(--secondary-green);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: var(--primary-green);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .feature-card {
+        margin-bottom: 1rem;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .footer,
+    .btn {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus indicators for keyboard navigation */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+    
+    .btn-success {
+        background-color: #000;
+        color: #fff;
+        border: 2px solid #000;
+    }
+} 
