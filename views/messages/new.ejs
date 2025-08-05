@@ -1,5 +1,5 @@
 <%- include('../partials/header', { 
-    title: 'New Message - Dr. Salmin Amour Sec. School',
+    title: 'New Message - Parent-School Hub',
     breadcrumbs: [
         { text: 'Messages', url: '/messages' },
         { text: 'New Message' }
@@ -24,24 +24,75 @@
                 <form method="POST" action="/messages/new">
                     <div class="mb-3">
                         <label for="receiver_id" class="form-label">Send to *</label>
+                        
+                        <% if (user.role === 'teacher') { %>
+                        <!-- Teacher Interface: Search for students or select users -->
+                        <div class="mb-3">
+                            <label class="form-label">Search for Student or Parent</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="studentSearch" 
+                                       placeholder="Search by student index number, name, or parent name...">
+                                <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div id="searchResults" class="mt-2" style="display: none;">
+                                <div class="list-group" id="searchResultsList"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Or Select from Available Users</label>
+                            <select class="form-select" id="receiver_id" name="receiver_id" required>
+                                <option value="">Select a user to message</option>
+                                <% users.forEach(user => { %>
+                                <option value="<%= user.id %>" data-type="<%= user.type || 'user' %>">
+                                    <%= user.name %> (<%= user.email %>) - <%= user.role %>
+                                </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <% } else if (user.role === 'parent') { %>
+                        <!-- Parent Interface: Select teachers or admins -->
+                        <select class="form-select" id="receiver_id" name="receiver_id" required>
+                            <option value="">Select a teacher or admin to message</option>
+                            <% users.forEach(user => { %>
+                            <option value="<%= user.id %>" data-type="<%= user.type || 'user' %>">
+                                <%= user.name %> (<%= user.email %>) - <%= user.role %>
+                            </option>
+                            <% }); %>
+                        </select>
+                        
+                        <% } else if (user.role === 'admin') { %>
+                        <!-- Admin Interface: Select any user or student -->
                         <select class="form-select" id="receiver_id" name="receiver_id" required>
                             <option value="">Select a user or student to message</option>
                             <% users.forEach(user => { %>
                             <option value="<%= user.id %>" data-type="<%= user.type || 'user' %>">
-                                <% if (user.type === 'student') { %>
-                                    <%= user.name %> (Student - <%= user.role %>) - Parent: <%= user.parent_name %>
-                                <% } else { %>
-                                    <%= user.name %> (<%= user.email %>) - <%= user.role %>
-                                <% } %>
+                                <%= user.name %> (<%= user.email %>) - <%= user.role %>
                             </option>
                             <% }); %>
+                            <% if (typeof students !== 'undefined' && students.length > 0) { %>
+                                <optgroup label="Students (will contact their parent)">
+                                <% students.forEach(student => { %>
+                                <option value="<%= student.id %>" data-type="student">
+                                    <%= student.name %> (Student - <%= student.role %>) - Parent: <%= student.parent_name %>
+                                </option>
+                                <% }); %>
+                                </optgroup>
+                            <% } %>
                         </select>
+                        <% } %>
+                        
                         <input type="hidden" id="receiver_type" name="receiver_type" value="user">
                         <small class="form-text text-muted">
-                            <% if (user.role === 'teacher' || user.role === 'admin') { %>
-                                You can select a user or search for a student to contact their parent
-                            <% } else { %>
-                                Choose the person you want to start a conversation with
+                            <% if (user.role === 'teacher') { %>
+                                Search for a student by index number, name, or parent name to contact their parent
+                            <% } else if (user.role === 'parent') { %>
+                                Choose a teacher or admin to start a conversation with
+                            <% } else if (user.role === 'admin') { %>
+                                You can select any user or student (students will contact their parent)
                             <% } %>
                         </small>
                     </div>
@@ -106,17 +157,9 @@
                                         <% } else { %>
                                             <span class="badge bg-success"><%= user.role %></span>
                                         <% } %>
-                                            </div>
-    </div>
-</div>
-
-<script>
-document.getElementById('receiver_id').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const receiverType = selectedOption.getAttribute('data-type') || 'user';
-    document.getElementById('receiver_type').value = receiverType;
-});
-</script>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <% }); %>
@@ -125,4 +168,105 @@ document.getElementById('receiver_id').addEventListener('change', function() {
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<script>
+// Handle receiver type selection
+document.getElementById('receiver_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const receiverType = selectedOption.getAttribute('data-type') || 'user';
+    document.getElementById('receiver_type').value = receiverType;
+});
+
+<% if (user.role === 'teacher') { %>
+// Student search functionality for teachers
+let searchTimeout;
+
+document.getElementById('studentSearch').addEventListener('input', function() {
+    const query = this.value.trim();
+    clearTimeout(searchTimeout);
+    
+    if (query.length < 2) {
+        document.getElementById('searchResults').style.display = 'none';
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        searchStudents(query);
+    }, 300);
+});
+
+document.getElementById('searchBtn').addEventListener('click', function() {
+    const query = document.getElementById('studentSearch').value.trim();
+    if (query.length >= 2) {
+        searchStudents(query);
+    }
+});
+
+function searchStudents(query) {
+    fetch(`/messages/search-students?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            const resultsDiv = document.getElementById('searchResults');
+            const resultsList = document.getElementById('searchResultsList');
+            
+            if (data.students && data.students.length > 0) {
+                resultsList.innerHTML = '';
+                data.students.forEach(student => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${student.student_name}</h6>
+                                <small class="text-muted">
+                                    Index: ${student.index_no} | Grade: ${student.grade}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    Parent: ${student.parent_name} (${student.parent_email})
+                                </small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary" 
+                                    onclick="selectStudent('${student.parent_id}', '${student.student_name}', '${student.parent_name}')">
+                                Select Parent
+                            </button>
+                        </div>
+                    `;
+                    resultsList.appendChild(item);
+                });
+                resultsDiv.style.display = 'block';
+            } else {
+                resultsDiv.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error searching students:', error);
+        });
+}
+
+function selectStudent(parentId, studentName, parentName) {
+    // Create a hidden option for the selected student's parent
+    const select = document.getElementById('receiver_id');
+    const option = document.createElement('option');
+    option.value = parentId;
+    option.textContent = `${parentName} (Parent of ${studentName})`;
+    option.selected = true;
+    option.setAttribute('data-type', 'user');
+    
+    // Remove any existing selected option
+    const existingSelected = select.querySelector('option[selected]');
+    if (existingSelected) {
+        existingSelected.selected = false;
+    }
+    
+    select.appendChild(option);
+    document.getElementById('receiver_type').value = 'user';
+    
+    // Hide search results
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('studentSearch').value = '';
+}
+<% } %>
+</script> 

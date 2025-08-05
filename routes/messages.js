@@ -158,9 +158,40 @@ router.post('/send', requireAuth, async (req, res) => {
 router.get('/new', requireAuth, async (req, res) => {
   try {
     let users = [];
+    let students = [];
     
-    if (req.session.user.role === 'teacher' || req.session.user.role === 'admin') {
-      // For teachers and admins, show all users and students
+    if (req.session.user.role === 'parent') {
+      // For parents, show only teachers and admins
+      const usersResult = await db.query(`
+        SELECT id, name, email, role, 'user' as type
+        FROM users 
+        WHERE id != $1 AND (role = 'teacher' OR role = 'admin')
+        ORDER BY name
+      `, [req.session.user.id]);
+      
+      users = usersResult.rows;
+    } else if (req.session.user.role === 'teacher') {
+      // For teachers, show parents and admins, plus students for searching
+      const usersResult = await db.query(`
+        SELECT id, name, email, role, 'user' as type
+        FROM users 
+        WHERE id != $1 AND (role = 'parent' OR role = 'admin')
+        ORDER BY name
+      `, [req.session.user.id]);
+      
+      const studentsResult = await db.query(`
+        SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) as name, 
+               s.index_no as email, s.grade as role, 'student' as type,
+               u.id as parent_id, u.name as parent_name, u.email as parent_email
+        FROM students s
+        JOIN users u ON s.parent_id = u.id
+        ORDER BY s.first_name, s.last_name
+      `);
+      
+      users = usersResult.rows;
+      students = studentsResult.rows;
+    } else if (req.session.user.role === 'admin') {
+      // For admins, show all users and students
       const usersResult = await db.query(`
         SELECT id, name, email, role, 'user' as type
         FROM users 
@@ -177,30 +208,60 @@ router.get('/new', requireAuth, async (req, res) => {
         ORDER BY s.first_name, s.last_name
       `);
       
-      users = [...usersResult.rows, ...studentsResult.rows];
-    } else {
-      // For parents, show only teachers and admins
-      const usersResult = await db.query(`
-        SELECT id, name, email, role, 'user' as type
-        FROM users 
-        WHERE id != $1 AND (role = 'teacher' OR role = 'admin')
-        ORDER BY name
-      `, [req.session.user.id]);
-      
       users = usersResult.rows;
+      students = studentsResult.rows;
     }
     
     res.render('messages/new', { 
       users: users,
+      students: students,
       user: req.session.user
     });
   } catch (error) {
     console.error('Error loading users:', error);
     res.render('messages/new', { 
       users: [],
+      students: [],
       user: req.session.user,
       error: 'Error loading users'
     });
+  }
+});
+
+// Search students for messaging (teachers only)
+router.get('/search-students', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'teacher' && req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    const { query } = req.query;
+    let students = [];
+    
+    if (query) {
+      const result = await db.query(`
+        SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) as student_name, 
+               s.index_no, s.grade,
+               u.id as parent_id, u.name as parent_name, u.email as parent_email
+        FROM students s
+        JOIN users u ON s.parent_id = u.id
+        WHERE s.index_no ILIKE $1 
+           OR s.first_name ILIKE $1 
+           OR s.last_name ILIKE $1
+           OR CONCAT(s.first_name, ' ', s.last_name) ILIKE $1
+           OR u.name ILIKE $1
+           OR u.email ILIKE $1
+        ORDER BY s.first_name, s.last_name
+        LIMIT 10
+      `, [`%${query}%`]);
+      
+      students = result.rows;
+    }
+    
+    res.json({ students });
+  } catch (error) {
+    console.error('Error searching students:', error);
+    res.status(500).json({ error: 'Error searching students' });
   }
 });
 

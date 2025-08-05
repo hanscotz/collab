@@ -496,11 +496,23 @@ router.get('/:id', requireAuth, requireAdmin, async (req, res) => {
       LIMIT 10
     `, [userId]);
     
+    // Get students if user is a parent
+    let students = [];
+    if (user.role === 'parent') {
+      const studentsResult = await db.query(`
+        SELECT * FROM students 
+        WHERE parent_id = $1 
+        ORDER BY grade, first_name, last_name
+      `, [userId]);
+      students = studentsResult.rows;
+    }
+    
     res.render('users/show', { 
       userToShow: user,
       posts: postsResult.rows,
       comments: commentsResult.rows,
       messages: messagesResult.rows,
+      students: students,
       user: req.session.user
     });
   } catch (error) {

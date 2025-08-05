@@ -256,7 +256,7 @@ router.get('/all', requireAuth, async (req, res) => {
     }
     
     const result = await db.query(`
-      SELECT s.*, u.name as parent_name, u.email as parent_email
+      SELECT s.*, u.name as parent_name, u.email as parent_email, u.is_approved as parent_approved
       FROM students s
       JOIN users u ON s.parent_id = u.id
       ORDER BY s.grade, s.first_name, s.last_name
@@ -274,6 +274,37 @@ router.get('/all', requireAuth, async (req, res) => {
       user: req.session.user,
       error: 'Error loading students'
     });
+  }
+});
+
+// View student details (admin only)
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'admin') {
+      return res.status(403).render('error', { message: 'Access denied. Admin only.' });
+    }
+    
+    const studentId = req.params.id;
+    const result = await db.query(`
+      SELECT s.*, u.name as parent_name, u.email as parent_email, u.is_approved as parent_approved, u.created_at as parent_created_at
+      FROM students s
+      JOIN users u ON s.parent_id = u.id
+      WHERE s.id = $1
+    `, [studentId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Student not found' });
+    }
+    
+    const student = result.rows[0];
+    res.render('students/view', { 
+      student,
+      user: req.session.user,
+      error: null
+    });
+  } catch (error) {
+    console.error('Error fetching student details:', error);
+    res.status(500).render('error', { message: 'Error loading student details' });
   }
 });
 

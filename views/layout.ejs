@@ -298,8 +298,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-school me-2"></i>
-                Dr. Salmin Amour Sec. School
+                Parent-School Hub
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -361,6 +360,13 @@
                         </a>
                     </li>
                     <% } %>
+                    <% if (user.role === 'admin') { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students/all">
+                            <i class="fas fa-users me-1"></i>All Students
+                        </a>
+                    </li>
+                    <% } %>
                     <% } %>
                     
                     <% if (isAuthenticated) { %>
@@ -391,17 +397,6 @@
                                 <i class="fas fa-sign-out-alt me-1"></i>Logout (Direct)
                             </a></li>
                         </ul>
-                    </li>
-                    <% } else { %>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/auth/login">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/auth/register">
-                            <i class="fas fa-user-plus me-1"></i>Register
-                        </a>
                     </li>
                     <% } %>
                 </ul>

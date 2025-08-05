@@ -65,7 +65,15 @@
                                 </div>
                                 <div class="mb-3">
                                     <strong>Status:</strong><br>
-                                    <span class="badge bg-success">Active</span>
+                                    <% if (userToShow.role === 'parent') { %>
+                                        <% if (userToShow.is_approved) { %>
+                                            <span class="badge bg-success">Approved</span>
+                                        <% } else { %>
+                                            <span class="badge bg-warning text-dark">Pending Approval</span>
+                                        <% } %>
+                                    <% } else { %>
+                                        <span class="badge bg-success">Active</span>
+                                    <% } %>
                                 </div>
                             </div>
                         </div>
@@ -73,6 +81,79 @@
                 </div>
             </div>
         </div>
+
+        <!-- Students Section (for parents only) -->
+        <% if (userToShow.role === 'parent' && students && students.length > 0) { %>
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>Students (<%= students.length %>)
+                </h4>
+                <div>
+                    <a href="/students/all" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-list me-1"></i>View All Students
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Index Number</th>
+                                <th>Name</th>
+                                <th>Grade</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% students.forEach(student => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= student.index_number %></strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-graduate fa-lg text-primary me-2"></i>
+                                        <div>
+                                            <strong><%= student.first_name %> <%= student.last_name %></strong>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info"><%= student.grade %></span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="/students/<%= student.id %>" class="btn btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="/messages/new?student_id=<%= student.id %>" class="btn btn-outline-primary" title="Contact Parent">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <% } else if (userToShow.role === 'parent') { %>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>Students
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Students Added</h5>
+                <p class="text-muted">This parent hasn't added any students yet.</p>
+            </div>
+        </div>
+        <% } %>
 
         <!-- User Activity -->
         <div class="row">
@@ -169,6 +250,25 @@
                     <a href="/messages/new" class="btn btn-outline-info">
                         <i class="fas fa-comments me-2"></i>Send Message
                     </a>
+                    
+                    <% if (userToShow.role === 'parent' && !userToShow.is_approved) { %>
+                    <hr>
+                    <h6 class="text-center text-muted mb-2">Parent Approval</h6>
+                    <form method="POST" action="/users/approve/<%= userToShow.id %>" 
+                          onsubmit="return confirm('Are you sure you want to approve this parent account?')">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Approve Parent
+                        </button>
+                    </form>
+                    <form method="POST" action="/users/reject/<%= userToShow.id %>" 
+                          onsubmit="return confirm('Are you sure you want to reject this parent account? This will delete the user permanently.')">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times me-2"></i>Reject Parent
+                        </button>
+                    </form>
+                    <% } %>
+                    
+                    <hr>
                     <a href="/users" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-2"></i>Back to Users
                     </a>
@@ -214,6 +314,16 @@
                         </div>
                     </div>
                 </div>
+                <% if (userToShow.role === 'parent') { %>
+                <div class="row text-center">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <h4 class="text-info"><%= students ? students.length : 0 %></h4>
+                            <small class="text-muted">Students</small>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
             </div>
         </div>
     </div>
