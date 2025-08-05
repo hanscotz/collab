@@ -120,6 +120,16 @@
                                 <span class="badge bg-success"><%= userToEdit.role %></span>
                             <% } %>
                         </div>
+                        <% if (userToEdit.role === 'parent') { %>
+                        <div class="mb-2">
+                            <strong>Approval Status:</strong> 
+                            <% if (userToEdit.is_approved) { %>
+                                <span class="badge bg-success">Approved</span>
+                            <% } else { %>
+                                <span class="badge bg-warning text-dark">Pending Approval</span>
+                            <% } %>
+                        </div>
+                        <% } %>
                         <div class="mb-2">
                             <strong>Email:</strong> 
                             <a href="mailto:<%= userToEdit.email %>"><%= userToEdit.email %></a>

@@ -32,7 +32,7 @@ const transporter = nodemailer.createTransport({
 // View all users (admin only)
 router.get('/', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { role, search } = req.query;
+    const { role, search, approval_status } = req.query;
     let query = 'SELECT * FROM users WHERE 1=1';
     const params = [];
     let paramCount = 0;
@@ -41,6 +41,15 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
       paramCount++;
       query += ` AND role = $${paramCount}`;
       params.push(role);
+    }
+    
+    if (approval_status && approval_status !== 'all') {
+      paramCount++;
+      if (approval_status === 'pending') {
+        query += ` AND is_approved = false`;
+      } else if (approval_status === 'approved') {
+        query += ` AND is_approved = true`;
+      }
     }
     
     if (search) {
@@ -57,21 +66,22 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
     const statsResult = await db.query(`
       SELECT 
         role,
-        COUNT(*) as count
+        COUNT(*) as count,
+        COUNT(CASE WHEN is_approved = false THEN 1 END) as pending_count
       FROM users 
       GROUP BY role
     `);
     
     const stats = {};
     statsResult.rows.forEach(row => {
-      stats[row.role] = row.count;
+      stats[row.role] = { total: row.count, pending: row.pending_count };
     });
     
     res.render('users/index', { 
       users: result.rows,
       stats: stats,
       user: req.session.user,
-      filters: { role, search }
+      filters: { role, search, approval_status }
     });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -124,30 +134,37 @@ router.post('/new', requireAuth, requireAdmin, async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Insert new user
+    // Insert new user with appropriate approval status
+    const isApproved = role === 'parent' ? false : true; // Parents need approval, others are auto-approved
     const result = await db.query(
-      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, email, hashedPassword, role]
+      'INSERT INTO users (name, email, password, role, is_approved) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, email, hashedPassword, role, isApproved]
     );
     
     const newUser = result.rows[0];
     
     // Send welcome email
     try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER || 'your-email@gmail.com',
-        to: email,
-        subject: 'Welcome to Parent-School Hub',
-        html: `
-          <h2>Welcome to Parent-School Hub!</h2>
-          <p>Hello ${name},</p>
-          <p>Your account has been created successfully with the role: <strong>${role}</strong></p>
-          <p>You can now log in to the system using your email and password.</p>
-          <p>Best regards,<br>School Administration</p>
-        `
-      });
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Welcome to Parent-School Hub',
+          html: `
+            <h2>Welcome to Parent-School Hub!</h2>
+            <p>Hello ${name},</p>
+            <p>Your account has been created successfully with the role: <strong>${role}</strong></p>
+            <p>You can now log in to the system using your email and password.</p>
+            <p>Best regards,<br>School Administration</p>
+          `
+        });
+        console.log(`Welcome email sent to ${email}`);
+      } else {
+        console.log(`Email not configured. Welcome notification for ${email} would be sent here.`);
+      }
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError);
+      console.log(`User ${name} (${email}) was created but welcome email failed.`);
     }
     
     res.redirect('/users?success=User created successfully');
@@ -207,15 +224,18 @@ router.post('/edit/:id', requireAuth, requireAdmin, async (req, res) => {
     
     let query, params;
     
+    // Set approval status based on role
+    const isApproved = role === 'parent' ? false : true; // Parents need approval, others are auto-approved
+    
     if (password && password.length >= 6) {
       // Update with new password
       const hashedPassword = await bcrypt.hash(password, 10);
-      query = 'UPDATE users SET name = $1, email = $2, role = $3, password = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5';
-      params = [name, email, role, hashedPassword, userId];
+      query = 'UPDATE users SET name = $1, email = $2, role = $3, password = $4, is_approved = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6';
+      params = [name, email, role, hashedPassword, isApproved, userId];
     } else {
       // Update without password
-      query = 'UPDATE users SET name = $1, email = $2, role = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4';
-      params = [name, email, role, userId];
+      query = 'UPDATE users SET name = $1, email = $2, role = $3, is_approved = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5';
+      params = [name, email, role, isApproved, userId];
     }
     
     await db.query(query, params);
@@ -285,6 +305,100 @@ router.get('/email', requireAuth, requireAdmin, async (req, res) => {
       user: req.session.user,
       error: 'Error loading users'
     });
+  }
+});
+
+// Approve parent account (admin only)
+router.post('/approve/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Check if user exists and is a parent
+    const userResult = await db.query('SELECT * FROM users WHERE id = $1 AND role = $2', [userId, 'parent']);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Parent user not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Update user to approved
+    await db.query('UPDATE users SET is_approved = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [userId]);
+    
+    // Send approval email
+    try {
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: 'Account Approved - Parent-School Hub',
+          html: `
+            <h2>Account Approved!</h2>
+            <p>Hello ${user.name},</p>
+            <p>Your parent account has been approved by the school administration.</p>
+            <p>You can now log in to the Parent-School Hub and access your dashboard.</p>
+            <p>Best regards,<br>School Administration</p>
+          `
+        });
+        console.log(`Approval email sent to ${user.email}`);
+      } else {
+        console.log(`Email not configured. Approval notification for ${user.email} would be sent here.`);
+      }
+    } catch (emailError) {
+      console.error('Error sending approval email:', emailError);
+      console.log(`Parent ${user.name} (${user.email}) was approved but email notification failed.`);
+    }
+    
+    res.redirect('/users?success=Parent account approved successfully');
+  } catch (error) {
+    console.error('Error approving user:', error);
+    res.status(500).json({ error: 'Error approving user' });
+  }
+});
+
+// Reject parent account (admin only)
+router.post('/reject/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Check if user exists and is a parent
+    const userResult = await db.query('SELECT * FROM users WHERE id = $1 AND role = $2', [userId, 'parent']);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Parent user not found' });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Delete user (this will cascade to related data)
+    await db.query('DELETE FROM users WHERE id = $1', [userId]);
+    
+    // Send rejection email
+    try {
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: 'Account Application - Parent-School Hub',
+          html: `
+            <h2>Account Application Update</h2>
+            <p>Hello ${user.name},</p>
+            <p>We regret to inform you that your parent account application has not been approved.</p>
+            <p>If you believe this is an error, please contact the school administration.</p>
+            <p>Best regards,<br>School Administration</p>
+          `
+        });
+        console.log(`Rejection email sent to ${user.email}`);
+      } else {
+        console.log(`Email not configured. Rejection notification for ${user.email} would be sent here.`);
+      }
+    } catch (emailError) {
+      console.error('Error sending rejection email:', emailError);
+      console.log(`Parent ${user.name} (${user.email}) was rejected but email notification failed.`);
+    }
+    
+    res.redirect('/users?success=Parent account rejected and deleted');
+  } catch (error) {
+    console.error('Error rejecting user:', error);
+    res.status(500).json({ error: 'Error rejecting user' });
   }
 });
 

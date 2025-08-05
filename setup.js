@@ -25,8 +25,8 @@ async function setupDatabase() {
         if (existingAdmin.rows.length === 0) {
             const hashedPassword = await bcrypt.hash(adminPassword, 10);
             await db.query(
-                'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)',
-                ['School Admin', adminEmail, hashedPassword, 'admin']
+                'INSERT INTO users (name, email, password, role, is_approved) VALUES ($1, $2, $3, $4, $5)',
+                ['School Admin', adminEmail, hashedPassword, 'admin', true]
             );
             console.log('✅ Admin user created successfully!');
             console.log(`   Email: ${adminEmail}`);

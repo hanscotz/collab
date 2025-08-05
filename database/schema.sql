@@ -7,7 +7,20 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'parent', -- 'parent', 'teacher', 'admin' - Changed default to 'parent'
+    role VARCHAR(20) NOT NULL DEFAULT 'parent', -- 'parent', 'teacher', 'admin'
+    is_approved BOOLEAN DEFAULT TRUE, -- FALSE for new parents until admin approval
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Students table
+CREATE TABLE IF NOT EXISTS students (
+    id SERIAL PRIMARY KEY,
+    index_no VARCHAR(20) UNIQUE NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    grade VARCHAR(10) NOT NULL CHECK (grade IN ('Form I', 'Form II', 'Form III', 'Form IV')),
+    parent_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -20,6 +33,7 @@ CREATE TABLE IF NOT EXISTS posts (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     category VARCHAR(50) DEFAULT 'general', -- 'announcement', 'event', 'news', 'general'
     visibility VARCHAR(20) DEFAULT 'all', -- 'all', 'teachers', 'parents'
+    target_grades VARCHAR(100) DEFAULT 'all', -- 'all' or comma-separated grades like 'Form I,Form II'
     is_pinned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -93,6 +107,7 @@ CREATE TABLE IF NOT EXISTS email_notifications (
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at);
+CREATE INDEX IF NOT EXISTS idx_posts_target_grades ON posts(target_grades);
 CREATE INDEX IF NOT EXISTS idx_post_reactions_post_id ON post_reactions(post_id);
 CREATE INDEX IF NOT EXISTS idx_post_reactions_user_id ON post_reactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_post_reactions_type ON post_reactions(reaction_type);
@@ -104,6 +119,11 @@ CREATE INDEX IF NOT EXISTS idx_direct_messages_receiver ON direct_messages(recei
 CREATE INDEX IF NOT EXISTS idx_direct_messages_conversation ON direct_messages(sender_id, receiver_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_users ON conversations(user1_id, user2_id);
 CREATE INDEX IF NOT EXISTS idx_email_notifications_user ON email_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_students_parent_id ON students(parent_id);
+CREATE INDEX IF NOT EXISTS idx_students_index_no ON students(index_no);
+CREATE INDEX IF NOT EXISTS idx_students_grade ON students(grade);
+CREATE INDEX IF NOT EXISTS idx_users_is_approved ON users(is_approved);
+CREATE INDEX IF NOT EXISTS idx_users_role_approved ON users(role, is_approved);
 
 -- Insert sample data
 INSERT INTO users (name, email, password, role) VALUES
@@ -113,12 +133,22 @@ INSERT INTO users (name, email, password, role) VALUES
 ('Mrs. Davis', 'teacher@school.com', '$2b$10$rQZ8K9mN2pL1vX3yA6bC7dE8fG9hI0jK1lM2nO3pQ4rS5tU6vW7xY8zA9bC0dE1f', 'teacher')
 ON CONFLICT (email) DO NOTHING;
 
--- Insert sample posts
-INSERT INTO posts (title, content, user_id, category) VALUES
-('Welcome Back to School!', 'Dear parents and students, welcome back to another exciting school year. We have many wonderful activities planned for this semester.', 1, 'announcement'),
-('Parent-Teacher Conference Schedule', 'Parent-teacher conferences will be held on October 15th and 16th. Please sign up for your preferred time slot.', 1, 'event'),
-('Science Fair Project Guidelines', 'The annual science fair is coming up! Here are the guidelines for student projects. Projects are due by November 10th.', 4, 'news'),
-('School Lunch Menu - October', 'Check out this month''s nutritious and delicious lunch menu. We''re introducing new healthy options!', 1, 'general')
+-- Insert sample students
+INSERT INTO students (index_no, first_name, last_name, grade, parent_id) VALUES
+('2024001', 'Michael', 'Smith', 'Form I', 2),
+('2024002', 'Emily', 'Smith', 'Form III', 2),
+('2024003', 'David', 'Johnson', 'Form II', 3),
+('2024004', 'Lisa', 'Johnson', 'Form IV', 3)
+ON CONFLICT (index_no) DO NOTHING;
+
+-- Insert sample posts with grade targeting
+INSERT INTO posts (title, content, user_id, category, target_grades) VALUES
+('Welcome Back to School!', 'Dear parents and students, welcome back to another exciting school year. We have many wonderful activities planned for this semester.', 1, 'announcement', 'all'),
+('Form I Orientation Program', 'All Form I students and their parents are invited to attend the orientation program on September 5th at 9 AM in the school hall.', 1, 'event', 'Form I'),
+('Form III Science Fair Guidelines', 'Form III students, please note the updated guidelines for the upcoming science fair. Projects are due by November 10th.', 4, 'news', 'Form III'),
+('Form II Mathematics Competition', 'Form II students will participate in the inter-school mathematics competition on October 15th. Please register by September 30th.', 4, 'event', 'Form II'),
+('Form IV Mock Examinations', 'Form IV students will have their mock examinations from October 20th to 25th. Please ensure all students are prepared.', 1, 'announcement', 'Form IV'),
+('School Lunch Menu - October', 'Check out this month''s nutritious and delicious lunch menu. We''re introducing new healthy options!', 1, 'general', 'all')
 ON CONFLICT DO NOTHING;
 
 -- Insert sample post reactions
@@ -127,11 +157,12 @@ INSERT INTO post_reactions (post_id, user_id, reaction_type) VALUES
 (1, 3, 'like'),
 (1, 4, 'like'),
 (2, 2, 'like'),
-(2, 3, 'dislike'),
 (3, 2, 'like'),
-(4, 2, 'like'),
 (4, 3, 'like'),
-(4, 4, 'dislike')
+(5, 3, 'like'),
+(6, 2, 'like'),
+(6, 3, 'like'),
+(6, 4, 'dislike')
 ON CONFLICT DO NOTHING;
 
 -- Insert sample direct messages

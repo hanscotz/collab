@@ -1,0 +1,120 @@
+<%- include('../partials/header', { 
+    title: 'Search Students - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [{ text: 'Search Students' }]
+}) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-search me-2"></i>Search Students
+                </h1>
+            </div>
+
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+            <% } %>
+
+            <!-- Search Form -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" action="/students/search" class="row g-3">
+                        <div class="col-md-8">
+                            <label for="query" class="form-label">Search Students</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="query" name="query" 
+                                       value="<%= query %>" placeholder="Search by student name or index number...">
+                            </div>
+                            <small class="form-text text-muted">You can search by student's first name, last name, full name, or index number</small>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                            <a href="/students/search" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <% if (query && students.length > 0) { %>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Search Results
+                            <span class="badge bg-primary ms-2"><%= students.length %> student(s) found</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Index Number</th>
+                                        <th>Grade</th>
+                                        <th>Parent Name</th>
+                                        <th>Parent Email</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% students.forEach(function(student) { %>
+                                        <tr>
+                                            <td>
+                                                <strong><%= student.first_name %> <%= student.last_name %></strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary"><%= student.index_no %></span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary"><%= student.grade %></span>
+                                            </td>
+                                            <td><%= student.parent_name %></td>
+                                            <td><%= student.parent_email %></td>
+                                            <td>
+                                                <a href="/messages/new?parent_id=<%= student.parent_id %>&student_name=<%= encodeURIComponent(student.first_name + ' ' + student.last_name) %>" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-envelope me-1"></i>Contact Parent
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            <% } else if (query && students.length === 0) { %>
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-search fa-3x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">No Students Found</h4>
+                        <p class="text-muted">No students match your search criteria. Please try a different search term.</p>
+                    </div>
+                </div>
+            <% } else if (!query) { %>
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-search fa-3x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">Search for Students</h4>
+                        <p class="text-muted">Enter a student's name or index number above to find their information and contact their parent.</p>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div> 

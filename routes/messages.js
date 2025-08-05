@@ -154,19 +154,44 @@ router.post('/send', requireAuth, async (req, res) => {
   }
 });
 
-// Start new conversation (admin only)
+// Start new conversation
 router.get('/new', requireAuth, async (req, res) => {
   try {
-    // Get all users except current user
-    const usersResult = await db.query(`
-      SELECT id, name, email, role 
-      FROM users 
-      WHERE id != $1 
-      ORDER BY name
-    `, [req.session.user.id]);
+    let users = [];
+    
+    if (req.session.user.role === 'teacher' || req.session.user.role === 'admin') {
+      // For teachers and admins, show all users and students
+      const usersResult = await db.query(`
+        SELECT id, name, email, role, 'user' as type
+        FROM users 
+        WHERE id != $1 
+        ORDER BY name
+      `, [req.session.user.id]);
+      
+      const studentsResult = await db.query(`
+        SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) as name, 
+               s.index_no as email, s.grade as role, 'student' as type,
+               u.id as parent_id, u.name as parent_name, u.email as parent_email
+        FROM students s
+        JOIN users u ON s.parent_id = u.id
+        ORDER BY s.first_name, s.last_name
+      `);
+      
+      users = [...usersResult.rows, ...studentsResult.rows];
+    } else {
+      // For parents, show only teachers and admins
+      const usersResult = await db.query(`
+        SELECT id, name, email, role, 'user' as type
+        FROM users 
+        WHERE id != $1 AND (role = 'teacher' OR role = 'admin')
+        ORDER BY name
+      `, [req.session.user.id]);
+      
+      users = usersResult.rows;
+    }
     
     res.render('messages/new', { 
-      users: usersResult.rows,
+      users: users,
       user: req.session.user
     });
   } catch (error) {
@@ -182,7 +207,7 @@ router.get('/new', requireAuth, async (req, res) => {
 // Start new conversation POST
 router.post('/new', requireAuth, async (req, res) => {
   try {
-    const { receiver_id, subject, message } = req.body;
+    const { receiver_id, receiver_type, subject, message } = req.body;
     const sender_id = req.session.user.id;
     
     if (!receiver_id || !subject || !message) {
@@ -193,11 +218,30 @@ router.post('/new', requireAuth, async (req, res) => {
       });
     }
     
+    let actual_receiver_id = receiver_id;
+    
+    // If receiver is a student, get the parent's ID
+    if (receiver_type === 'student') {
+      const studentResult = await db.query(`
+        SELECT parent_id FROM students WHERE id = $1
+      `, [receiver_id]);
+      
+      if (studentResult.rows.length === 0) {
+        return res.render('messages/new', { 
+          users: [],
+          user: req.session.user,
+          error: 'Student not found'
+        });
+      }
+      
+      actual_receiver_id = studentResult.rows[0].parent_id;
+    }
+    
     // Insert message
     await db.query(`
       INSERT INTO direct_messages (sender_id, receiver_id, subject, message) 
       VALUES ($1, $2, $3, $4)
-    `, [sender_id, receiver_id, subject, message]);
+    `, [sender_id, actual_receiver_id, subject, message]);
     
     // Create or update conversation
     await db.query(`
@@ -205,9 +249,9 @@ router.post('/new', requireAuth, async (req, res) => {
       VALUES ($1, $2, CURRENT_TIMESTAMP)
       ON CONFLICT (user1_id, user2_id) 
       DO UPDATE SET last_message_at = CURRENT_TIMESTAMP
-    `, [sender_id, receiver_id]);
+    `, [sender_id, actual_receiver_id]);
     
-    res.redirect(`/messages/conversation/${receiver_id}`);
+    res.redirect(`/messages/conversation/${actual_receiver_id}`);
   } catch (error) {
     console.error('Error starting conversation:', error);
     res.render('messages/new', { 

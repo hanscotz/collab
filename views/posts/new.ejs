@@ -56,6 +56,25 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="target_grades" class="form-label">Target Grades</label>
+                        <select class="form-select" id="target_grades" name="target_grades">
+                            <option value="all">All Grades</option>
+                            <option value="Form I">Form I Only</option>
+                            <option value="Form II">Form II Only</option>
+                            <option value="Form III">Form III Only</option>
+                            <option value="Form IV">Form IV Only</option>
+                            <option value="Form I,Form II">Form I & II</option>
+                            <option value="Form III,Form IV">Form III & IV</option>
+                            <option value="Form I,Form III">Form I & III</option>
+                            <option value="Form I,Form IV">Form I & IV</option>
+                            <option value="Form II,Form III">Form II & III</option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Select specific grades for targeted announcements (parents will only see announcements relevant to their children's grades)
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="content" class="form-label">Content *</label>
                         <textarea class="form-control" id="content" name="content" rows="8" 
                                   placeholder="Write your announcement content here..." required></textarea>

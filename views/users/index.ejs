@@ -22,7 +22,7 @@
             <div class="card-body">
                 <!-- Filters -->
                 <form method="GET" action="/users" class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="role" class="form-label">Filter by Role</label>
                         <select class="form-select" id="role" name="role">
                             <option value="all" <%= filters.role === 'all' || !filters.role ? 'selected' : '' %>>All Roles</option>
@@ -31,7 +31,15 @@
                             <option value="parent" <%= filters.role === 'parent' ? 'selected' : '' %>>Parent</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
+                        <label for="approval_status" class="form-label">Approval Status</label>
+                        <select class="form-select" id="approval_status" name="approval_status">
+                            <option value="all" <%= filters.approval_status === 'all' || !filters.approval_status ? 'selected' : '' %>>All Status</option>
+                            <option value="approved" <%= filters.approval_status === 'approved' ? 'selected' : '' %>>Approved</option>
+                            <option value="pending" <%= filters.approval_status === 'pending' ? 'selected' : '' %>>Pending Approval</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
                         <label for="search" class="form-label">Search Users</label>
                         <input type="text" class="form-control" id="search" name="search" 
                                value="<%= filters.search || '' %>" placeholder="Search by name or email">
@@ -72,6 +80,7 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
+                                <th>Status</th>
                                 <th>Joined</th>
                                 <th>Actions</th>
                             </tr>
@@ -103,6 +112,17 @@
                                     <% } %>
                                 </td>
                                 <td>
+                                    <% if (currentUser.role === 'parent') { %>
+                                        <% if (currentUser.is_approved) { %>
+                                            <span class="badge bg-success">Approved</span>
+                                        <% } else { %>
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        <% } %>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary">N/A</span>
+                                    <% } %>
+                                </td>
+                                <td>
                                     <small class="text-muted">
                                         <%= new Date(currentUser.created_at).toLocaleDateString() %>
                                     </small>
@@ -115,6 +135,22 @@
                                         <a href="/users/edit/<%= currentUser.id %>" class="btn btn-outline-primary" title="Edit User">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <% if (currentUser.role === 'parent' && !currentUser.is_approved) { %>
+                                        <form method="POST" action="/users/approve/<%= currentUser.id %>" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to approve this parent account?')">
+                                            <button type="submit" class="btn btn-outline-success" title="Approve Parent">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="/users/reject/<%= currentUser.id %>" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to reject this parent account? This will delete the user permanently.')">
+                                            <button type="submit" class="btn btn-outline-danger" title="Reject Parent">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                        <% } %>
                                         <% if (currentUser.id !== user.id) { %>
                                         <form method="POST" action="/users/delete/<%= currentUser.id %>" 
                                               style="display: inline;" 
@@ -143,7 +179,7 @@
         <div class="card bg-primary text-white">
             <div class="card-body text-center">
                 <i class="fas fa-users fa-2x mb-2"></i>
-                <h5 class="card-title"><%= stats.admin || 0 %></h5>
+                <h5 class="card-title"><%= stats.admin ? stats.admin.total || 0 : 0 %></h5>
                 <p class="card-text">Administrators</p>
             </div>
         </div>
@@ -152,7 +188,7 @@
         <div class="card bg-info text-white">
             <div class="card-body text-center">
                 <i class="fas fa-chalkboard-teacher fa-2x mb-2"></i>
-                <h5 class="card-title"><%= stats.teacher || 0 %></h5>
+                <h5 class="card-title"><%= stats.teacher ? stats.teacher.total || 0 : 0 %></h5>
                 <p class="card-text">Teachers</p>
             </div>
         </div>
@@ -161,8 +197,11 @@
         <div class="card bg-success text-white">
             <div class="card-body text-center">
                 <i class="fas fa-user-friends fa-2x mb-2"></i>
-                <h5 class="card-title"><%= stats.parent || 0 %></h5>
+                <h5 class="card-title"><%= stats.parent ? stats.parent.total || 0 : 0 %></h5>
                 <p class="card-text">Parents</p>
+                <% if (stats.parent && stats.parent.pending > 0) { %>
+                <small class="badge bg-warning text-dark"><%= stats.parent.pending %> Pending</small>
+                <% } %>
             </div>
         </div>
     </div>
@@ -170,7 +209,11 @@
         <div class="card bg-secondary text-white">
             <div class="card-body text-center">
                 <i class="fas fa-chart-bar fa-2x mb-2"></i>
-                <h5 class="card-title"><%= (stats.admin || 0) + (stats.teacher || 0) + (stats.parent || 0) %></h5>
+                <h5 class="card-title"><%= 
+                    (stats.admin ? stats.admin.total || 0 : 0) + 
+                    (stats.teacher ? stats.teacher.total || 0 : 0) + 
+                    (stats.parent ? stats.parent.total || 0 : 0) 
+                %></h5>
                 <p class="card-text">Total Users</p>
             </div>
         </div>

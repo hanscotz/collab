@@ -340,6 +340,35 @@
                         </a>
                     </li>
                     <% } %>
+                    <% if (user.role === 'parent') { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students/my-students">
+                            <i class="fas fa-user-graduate me-1"></i>My Students
+                        </a>
+                    </li>
+                    <% if (!user.is_approved) { %>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="/auth/pending-approval">
+                            <i class="fas fa-clock me-1"></i>Pending Approval
+                        </a>
+                    </li>
+                    <% } %>
+                    <% } %>
+                    <% if (user.role === 'teacher' || user.role === 'admin') { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students/search">
+                            <i class="fas fa-search me-1"></i>Search Students
+                        </a>
+                    </li>
+                    <% } %>
+                    <% } %>
+                    
+                    <% if (isAuthenticated) { %>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="/auth/logout" onclick="return confirm('Are you sure you want to logout?')">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </li>
                     <% } %>
                 </ul>
                 
@@ -351,9 +380,15 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><span class="dropdown-item-text text-muted"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span></li>
+                            <% if (user.role === 'parent' && !user.is_approved) { %>
+                            <li><span class="dropdown-item-text text-warning"><i class="fas fa-clock me-1"></i>Pending Approval</span></li>
+                            <% } %>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/auth/logout">
+                            <li><a class="dropdown-item" href="#" onclick="confirmLogout()">
                                 <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                            <li><a class="dropdown-item" href="/auth/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout (Direct)
                             </a></li>
                         </ul>
                     </li>
@@ -820,7 +855,48 @@
             }
             `;
             document.head.appendChild(style);
+            
+            // Logout confirmation function
+            window.confirmLogout = function() {
+                console.log('confirmLogout function called');
+                if (confirm('Are you sure you want to logout?')) {
+                    console.log('User confirmed logout, redirecting...');
+                    window.location.href = '/auth/logout';
+                } else {
+                    console.log('User cancelled logout');
+                }
+            };
+            
+            // Session timeout warning (25 minutes - 5 minutes before server timeout)
+            if (document.querySelector('.navbar-nav .dropdown-toggle')) {
+                let sessionTimeout;
+                let warningShown = false;
+                
+                function resetSessionTimeout() {
+                    clearTimeout(sessionTimeout);
+                    sessionTimeout = setTimeout(() => {
+                        if (!warningShown) {
+                            warningShown = true;
+                            if (confirm('Your session will expire in 5 minutes due to inactivity. Do you want to stay logged in?')) {
+                                // Reset the warning
+                                warningShown = false;
+                                resetSessionTimeout();
+                            } else {
+                                window.location.href = '/auth/logout';
+                            }
+                        }
+                    }, 25 * 60 * 1000); // 25 minutes
+                }
+                
+                // Reset timeout on user activity
+                ['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
+                    document.addEventListener(event, resetSessionTimeout, true);
+                });
+                
+                // Start the timeout
+                resetSessionTimeout();
+            }
         });
     </script>
-</body>
-</html> 
+    
+    <%- include('partials/footer') %> 

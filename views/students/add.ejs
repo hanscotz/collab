@@ -1,0 +1,103 @@
+<%- include('../partials/header', { 
+    title: 'Add Student - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [{ text: 'My Students', url: '/students/my-students' }, { text: 'Add Student' }]
+}) %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Add Student
+                </h4>
+            </div>
+            <div class="card-body">
+                <% if (typeof welcome !== 'undefined' && welcome) { %>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Welcome!</strong> Your account has been created successfully. Now please add at least one student to your account.
+                    </div>
+                <% } %>
+
+                <% if (error) { %>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                    </div>
+                <% } %>
+
+                <form method="POST" action="/students/add">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="index_no" class="form-label">Student Index Number *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-id-card"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="index_no" name="index_no" required>
+                                </div>
+                                <small class="form-text text-muted">Enter the official school index number</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="grade" class="form-label">Grade *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </span>
+                                    <select class="form-select" id="grade" name="grade" required>
+                                        <option value="">Select Grade</option>
+                                        <option value="Form I">Form I</option>
+                                        <option value="Form II">Form II</option>
+                                        <option value="Form III">Form III</option>
+                                        <option value="Form IV">Form IV</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> Please ensure all information is accurate. This will be used for grade-specific announcements and communications.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/students/my-students" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Students
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> 

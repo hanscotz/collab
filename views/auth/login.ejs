@@ -22,6 +22,12 @@
                 </div>
                 <% } %>
                 
+                <% if (message) { %>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i><%= message %>
+                </div>
+                <% } %>
+                
                 <form method="POST" action="/auth/login">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>

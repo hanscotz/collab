@@ -25,15 +25,24 @@
                     <div class="mb-3">
                         <label for="receiver_id" class="form-label">Send to *</label>
                         <select class="form-select" id="receiver_id" name="receiver_id" required>
-                            <option value="">Select a user to message</option>
+                            <option value="">Select a user or student to message</option>
                             <% users.forEach(user => { %>
-                            <option value="<%= user.id %>">
-                                <%= user.name %> (<%= user.email %>) - <%= user.role %>
+                            <option value="<%= user.id %>" data-type="<%= user.type || 'user' %>">
+                                <% if (user.type === 'student') { %>
+                                    <%= user.name %> (Student - <%= user.role %>) - Parent: <%= user.parent_name %>
+                                <% } else { %>
+                                    <%= user.name %> (<%= user.email %>) - <%= user.role %>
+                                <% } %>
                             </option>
                             <% }); %>
                         </select>
+                        <input type="hidden" id="receiver_type" name="receiver_type" value="user">
                         <small class="form-text text-muted">
-                            Choose the person you want to start a conversation with
+                            <% if (user.role === 'teacher' || user.role === 'admin') { %>
+                                You can select a user or search for a student to contact their parent
+                            <% } else { %>
+                                Choose the person you want to start a conversation with
+                            <% } %>
                         </small>
                     </div>
                     
@@ -97,9 +106,17 @@
                                         <% } else { %>
                                             <span class="badge bg-success"><%= user.role %></span>
                                         <% } %>
-                                    </div>
-                                </div>
-                            </div>
+                                            </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('receiver_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const receiverType = selectedOption.getAttribute('data-type') || 'user';
+    document.getElementById('receiver_type').value = receiverType;
+});
+</script>
                         </div>
                     </div>
                     <% }); %>

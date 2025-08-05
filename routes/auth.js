@@ -16,7 +16,10 @@ router.get('/login', (req, res) => {
   if (req.session.user) {
     return res.redirect('/');
   }
-  res.render('auth/login', { error: null });
+  
+  // Check for session timeout message
+  const message = req.query.message;
+  res.render('auth/login', { error: null, message: message });
 });
 
 // Login POST
@@ -37,11 +40,19 @@ router.post('/login', async (req, res) => {
       return res.render('auth/login', { error: 'Invalid email or password' });
     }
     
+    // Check if parent account is approved
+    if (user.role === 'parent' && !user.is_approved) {
+      return res.render('auth/login', { 
+        error: 'Your account is pending admin approval. Please contact the school administration.' 
+      });
+    }
+    
     req.session.user = {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      is_approved: user.is_approved
     };
     
     res.redirect('/');
@@ -62,7 +73,7 @@ router.get('/register', (req, res) => {
 // Register POST
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, role } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
     
     if (password !== confirmPassword) {
       return res.render('auth/register', { error: 'Passwords do not match' });
@@ -81,34 +92,74 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-                // Insert new user with default 'parent' role
-            const result = await db.query(
-              'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
-              [name, email, hashedPassword, 'parent']
-            );
+    // Insert new user with default 'parent' role and unapproved status
+    const result = await db.query(
+      'INSERT INTO users (name, email, password, role, is_approved) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, email, hashedPassword, 'parent', false]
+    );
     
     const user = result.rows[0];
     req.session.user = {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      is_approved: user.is_approved
     };
     
-    res.redirect('/');
+    // Redirect to pending approval page for new parents
+    res.redirect('/auth/pending-approval');
   } catch (error) {
     console.error('Registration error:', error);
     res.render('auth/register', { error: 'An error occurred during registration' });
   }
 });
 
+// Pending approval page for unapproved parents
+router.get('/pending-approval', (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'parent' || req.session.user.is_approved) {
+    return res.redirect('/');
+  }
+  res.render('auth/pending-approval', { user: req.session.user });
+});
+
 // Logout
 router.get('/logout', (req, res) => {
+  // Store user info for logging before destroying session
+  const userInfo = req.session.user ? `${req.session.user.name} (${req.session.user.email})` : 'Unknown user';
+  
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err);
+      return res.status(500).render('error', { message: 'Error during logout' });
     }
-    res.redirect('/');
+    
+    // Log successful logout
+    console.log(`User logged out successfully: ${userInfo}`);
+    
+    // Clear any cookies and redirect to home page
+    res.clearCookie('connect.sid');
+    res.redirect('/?message=You have been logged out successfully');
+  });
+});
+
+// Logout POST (for additional security)
+router.post('/logout', (req, res) => {
+  // Store user info for logging before destroying session
+  const userInfo = req.session.user ? `${req.session.user.name} (${req.session.user.email})` : 'Unknown user';
+  
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Error during logout' });
+    }
+    
+    // Log successful logout
+    console.log(`User logged out successfully: ${userInfo}`);
+    
+    // Clear any cookies and redirect to home page
+    res.clearCookie('connect.sid');
+    res.redirect('/?message=You have been logged out successfully');
   });
 });
 

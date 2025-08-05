@@ -38,6 +38,21 @@ router.get('/', async (req, res) => {
       const userRole = req.session.user.role;
       if (userRole === 'parent') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'parents')`);
+        
+        // Add grade-based filtering for parents
+        const studentGradesResult = await db.query(`
+          SELECT DISTINCT grade FROM students WHERE parent_id = $1
+        `, [req.session.user.id]);
+        
+        if (studentGradesResult.rows.length > 0) {
+          const studentGrades = studentGradesResult.rows.map(row => row.grade);
+          const gradeConditions = studentGrades.map(grade => `p.target_grades LIKE '%${grade}%'`);
+          gradeConditions.push(`p.target_grades = 'all'`);
+          whereClause.push(`(${gradeConditions.join(' OR ')})`);
+        } else {
+          // If parent has no students, only show general posts
+          whereClause.push(`p.target_grades = 'all'`);
+        }
       } else if (userRole === 'teacher') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'teachers')`);
       }
@@ -45,6 +60,7 @@ router.get('/', async (req, res) => {
     } else {
       // For non-authenticated users, only show posts visible to all
       whereClause.push(`p.visibility = 'all'`);
+      whereClause.push(`p.target_grades = 'all'`);
     }
     
     if (category && category !== 'all') {
@@ -166,7 +182,7 @@ router.get('/:id', async (req, res) => {
 // Create new post (admin only)
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { title, content, category, visibility } = req.body;
+    const { title, content, category, visibility, target_grades } = req.body;
     
     if (!title || !content || !visibility) {
       return res.render('posts/new', { 
@@ -176,8 +192,8 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     }
     
     const result = await db.query(
-      'INSERT INTO posts (title, content, category, visibility, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [title, content, category || 'general', visibility, req.session.user.id]
+      'INSERT INTO posts (title, content, category, visibility, target_grades, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [title, content, category || 'general', visibility, target_grades || 'all', req.session.user.id]
     );
     
     res.redirect(`/posts/${result.rows[0].id}`);
@@ -218,7 +234,7 @@ router.get('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
 router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
   try {
     const postId = req.params.id;
-    const { title, content, category, visibility } = req.body;
+    const { title, content, category, visibility, target_grades } = req.body;
     
     if (!title || !content || !visibility) {
       return res.status(400).render('error', { message: 'Title, content, and visibility are required' });
@@ -236,8 +252,8 @@ router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
     }
     
     await db.query(
-      'UPDATE posts SET title = $1, content = $2, category = $3, visibility = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5',
-      [title, content, category || 'general', visibility, postId]
+      'UPDATE posts SET title = $1, content = $2, category = $3, visibility = $4, target_grades = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6',
+      [title, content, category || 'general', visibility, target_grades || 'all', postId]
     );
     
     res.redirect(`/posts/${postId}`);
