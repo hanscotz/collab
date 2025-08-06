@@ -1,3 +1,16 @@
+-- =====================================================
+-- Parent-School Collaboration Platform Database Schema
+-- =====================================================
+-- 
+-- This schema implements a complete grade-section system where:
+-- - Each grade (Form I, II, III, IV) has exactly 4 sections (A, B, C, D)
+-- - Students must be assigned to a specific class section
+-- - Parents select grade first, then choose from available sections
+-- - All forms use dynamic loading via API endpoint /students/api/classes/:grade
+--
+-- Last Updated: Current version with section-based class structure
+-- =====================================================
+
 -- Create database (run this separately if needed)
 -- CREATE DATABASE parent_school_collab;
 
@@ -189,6 +202,28 @@ INSERT INTO students (index_no, first_name, last_name, grade, parent_id, class_i
 ('F1A-001', 'Emma', 'Wilson', 'Form I', 5, 1),
 ('F1A-002', 'James', 'Davis', 'Form I', 6, 1),
 ('F1B-001', 'Sophia', 'Miller', 'Form I', 7, 2),
-('F2A-001', 'William', 'Garcia', 'Form II', 8, 5),
-('F3A-001', 'Olivia', 'Taylor', 'Form III', 5, 9),
-('F4A-001', 'Noah', 'Anderson', 'Form IV', 6, 13);
+('F2A-001', 'William', 'Garcia', 'Form II', 8, 3),
+('F3A-001', 'Olivia', 'Taylor', 'Form III', 5, 5),
+('F4A-001', 'Noah', 'Anderson', 'Form IV', 6, 7);
+
+-- =====================================================
+-- Schema Summary
+-- =====================================================
+--
+-- Database Structure:
+-- - 8 users (1 admin, 3 teachers, 4 parents)
+-- - 16 classes (4 grades × 4 sections each)
+-- - 6 sample students across different grades
+--
+-- Class Structure:
+-- Form I:   Sections A, B, C, D (IDs: 1, 2, 9, 10)
+-- Form II:  Sections A, B, C, D (IDs: 3, 4, 11, 12)
+-- Form III: Sections A, B, C, D (IDs: 5, 6, 13, 14)
+-- Form IV:  Sections A, B, C, D (IDs: 7, 8, 15, 16)
+--
+-- Key Features:
+-- - Unique constraint on (grade, section) combinations
+-- - Required class_id for all students
+-- - Dynamic class loading via API
+-- - Complete approval system for users and students
+-- =====================================================
