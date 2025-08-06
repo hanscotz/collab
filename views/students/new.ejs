@@ -1,6 +1,6 @@
 <%- include('../partials/header', { 
-    title: 'Edit Student',
-    breadcrumbs: [{ text: 'Students', url: '/students' }, { text: 'Edit Student' }]
+    title: 'Add New Student',
+    breadcrumbs: [{ text: 'Students', url: '/students' }, { text: 'Add New Student' }]
 }) %>
 
 <div class="row justify-content-center">
@@ -8,11 +8,24 @@
         <div class="card">
             <div class="card-header">
                 <h4 class="mb-0">
-                    <i class="fas fa-user-edit me-2"></i>Edit Student
+                    <i class="fas fa-user-plus me-2"></i>Add New Student
                 </h4>
             </div>
             <div class="card-body">
-                <form method="POST" action="/students/<%= student.id %>/edit">
+                <% if (typeof welcome !== 'undefined' && welcome) { %>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Welcome!</strong> You can now add students to the system.
+                    </div>
+                <% } %>
+
+                <% if (error) { %>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                    </div>
+                <% } %>
+
+                <form method="POST" action="/students">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -21,7 +34,7 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-id-card"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="index_no" name="index_no" value="<%= student.index_no %>" required>
+                                    <input type="text" class="form-control" id="index_no" name="index_no" required>
                                 </div>
                                 <small class="form-text text-muted">Enter the official school index number</small>
                             </div>
@@ -35,10 +48,10 @@
                                     </span>
                                     <select class="form-select" id="grade" name="grade" required>
                                         <option value="">Select Grade</option>
-                                        <option value="Form I" <%= student.grade === 'Form I' ? 'selected' : '' %>>Form I</option>
-                                        <option value="Form II" <%= student.grade === 'Form II' ? 'selected' : '' %>>Form II</option>
-                                        <option value="Form III" <%= student.grade === 'Form III' ? 'selected' : '' %>>Form III</option>
-                                        <option value="Form IV" <%= student.grade === 'Form IV' ? 'selected' : '' %>>Form IV</option>
+                                        <option value="Form I">Form I</option>
+                                        <option value="Form II">Form II</option>
+                                        <option value="Form III">Form III</option>
+                                        <option value="Form IV">Form IV</option>
                                     </select>
                                 </div>
                             </div>
@@ -53,7 +66,7 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="first_name" name="first_name" value="<%= student.first_name %>" required>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
                                 </div>
                             </div>
                         </div>
@@ -64,7 +77,7 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input type="text" class="form-control" id="last_name" name="last_name" value="<%= student.last_name %>" required>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
                                 </div>
                             </div>
                         </div>
@@ -81,7 +94,7 @@
                                     <select class="form-select" id="parent_id" name="parent_id" required>
                                         <option value="">Select Parent</option>
                                         <% parents.forEach(function(parent) { %>
-                                            <option value="<%= parent.id %>" <%= student.parent_id == parent.id ? 'selected' : '' %>><%= parent.name %> (<%= parent.email %>)</option>
+                                            <option value="<%= parent.id %>"><%= parent.name %> (<%= parent.email %>)</option>
                                         <% }); %>
                                     </select>
                                 </div>
@@ -98,7 +111,7 @@
                                     <select class="form-select" id="class_id" name="class_id">
                                         <option value="">No Class Assignment</option>
                                         <% classes.forEach(function(classItem) { %>
-                                            <option value="<%= classItem.id %>" <%= student.class_id == classItem.id ? 'selected' : '' %>><%= classItem.name %> (<%= classItem.grade %>)</option>
+                                            <option value="<%= classItem.id %>"><%= classItem.name %> (<%= classItem.grade %>)</option>
                                         <% }); %>
                                     </select>
                                 </div>
@@ -109,7 +122,7 @@
 
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> Class assignments determine which announcements students can see. 
+                        <strong>Important:</strong> Class assignments determine which announcements students can see. 
                         Students without class assignments will only see general announcements.
                     </div>
 
@@ -118,7 +131,7 @@
                             <i class="fas fa-arrow-left me-2"></i>Back to Students
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Update Student
+                            <i class="fas fa-plus me-2"></i>Add Student
                         </button>
                     </div>
                 </form>

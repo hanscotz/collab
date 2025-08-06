@@ -342,41 +342,17 @@
                         </a>
                     </li>
                     <% } %>
-                    <% if (user.role === 'parent') { %>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/students/my-students">
-                            <i class="fas fa-user-graduate me-1"></i>My Students
-                        </a>
-                    </li>
-                    <% if (!user.is_approved) { %>
+                    <% if (user.role === 'parent' && !user.is_approved) { %>
                     <li class="nav-item">
                         <a class="nav-link text-warning" href="/auth/pending-approval">
                             <i class="fas fa-clock me-1"></i>Pending Approval
                         </a>
                     </li>
                     <% } %>
-                    <% } %>
-                    <% if (user.role === 'teacher' || user.role === 'admin') { %>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/students/search">
-                            <i class="fas fa-search me-1"></i>Search Students
-                        </a>
-                    </li>
-                    <% } %>
                     <% if (user.role === 'admin') { %>
                     <li class="nav-item">
-                        <a class="nav-link" href="/students/all">
-                            <i class="fas fa-users me-1"></i>All Students
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/students/pending-approvals">
-                            <i class="fas fa-clock me-1"></i>Pending Approvals
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/students/notifications">
-                            <i class="fas fa-bell me-1"></i>Notifications
+                        <a class="nav-link" href="/students">
+                            <i class="fas fa-user-graduate me-1"></i>Students
                         </a>
                     </li>
                     <% } %>
