@@ -1,0 +1,107 @@
+<%- include('../partials/header', { 
+    title: 'Admin Notifications - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'Student Management', url: '/students/all' },
+        { text: 'Notifications' }
+    ]
+}) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-bell me-2"></i>Admin Notifications
+                </h1>
+                <a href="/students/pending-approvals" class="btn btn-outline-warning">
+                    <i class="fas fa-clock me-2"></i>Pending Approvals
+                </a>
+            </div>
+
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+            <% } %>
+
+            <% if (notifications.length === 0) { %>
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-bell-slash fa-3x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">No Notifications</h4>
+                        <p class="text-muted mb-0">You have no notifications at this time.</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="row">
+                    <div class="col-12">
+                        <% notifications.forEach(function(notification) { %>
+                            <div class="card mb-3 <%= !notification.is_read ? 'border-primary' : '' %>">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <h6 class="card-title mb-0 me-2">
+                                                    <%= notification.title %>
+                                                </h6>
+                                                <% if (!notification.is_read) { %>
+                                                    <span class="badge bg-primary">New</span>
+                                                <% } %>
+                                                <span class="badge bg-secondary ms-2">
+                                                    <%= notification.type.replace('_', ' ').toUpperCase() %>
+                                                </span>
+                                            </div>
+                                            <p class="card-text mb-2"><%= notification.message %></p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                <%= new Date(notification.created_at).toLocaleString() %>
+                                            </small>
+                                        </div>
+                                        <div class="ms-3">
+                                            <% if (!notification.is_read) { %>
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                        onclick="markAsRead(<%= notification.id %>)">
+                                                    <i class="fas fa-check me-1"></i>Mark Read
+                                                </button>
+                                            <% } else { %>
+                                                <span class="text-success">
+                                                    <i class="fas fa-check-circle"></i> Read
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/students/notifications/mark-read/${notificationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show updated status
+            location.reload();
+        } else {
+            alert('Error marking notification as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error marking notification as read');
+    });
+}
+</script> 

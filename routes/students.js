@@ -35,24 +35,27 @@ router.get('/my-students', requireAuth, requireParent, async (req, res) => {
     }
     
     const parentId = req.session.user.id;
+    const pendingApproval = req.query.pending === 'approval';
     
     const result = await db.query(`
       SELECT * FROM students 
       WHERE parent_id = $1 
-      ORDER BY grade, first_name, last_name
+      ORDER BY is_approved ASC, grade, first_name, last_name
     `, [parentId]);
     
     res.render('students/my-students', { 
       students: result.rows,
       user: req.session.user,
-      error: null
+      error: null,
+      pendingApproval
     });
   } catch (error) {
     console.error('Error fetching students:', error);
     res.render('students/my-students', { 
       students: [],
       user: req.session.user,
-      error: 'Error loading students'
+      error: 'Error loading students',
+      pendingApproval: false
     });
   }
 });
@@ -94,13 +97,27 @@ router.post('/add', requireAuth, requireParent, async (req, res) => {
       });
     }
     
-    // Insert new student
-    await db.query(
-      'INSERT INTO students (index_no, first_name, last_name, grade, parent_id) VALUES ($1, $2, $3, $4, $5)',
-      [index_no, first_name, last_name, grade, parentId]
+    // Insert new student with pending approval status
+    const studentResult = await db.query(
+      'INSERT INTO students (index_no, first_name, last_name, grade, parent_id, is_approved) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [index_no, first_name, last_name, grade, parentId, false]
     );
     
-    res.redirect('/students/my-students');
+    const newStudent = studentResult.rows[0];
+    
+    // Create notification for admin
+    await db.query(`
+      INSERT INTO admin_notifications (type, title, message, related_user_id, related_student_id) 
+      VALUES ($1, $2, $3, $4, $5)
+    `, [
+      'student_added',
+      'New Student Registration',
+      `Parent ${req.session.user.name} (${req.session.user.email}) has added a new student: ${first_name} ${last_name} (${index_no}) - ${grade}`,
+      parentId,
+      newStudent.id
+    ]);
+    
+    res.redirect('/students/my-students?pending=approval');
   } catch (error) {
     console.error('Error adding student:', error);
     res.render('students/add', { 
@@ -221,10 +238,12 @@ router.get('/search', requireAuth, requireTeacherOrAdmin, async (req, res) => {
         SELECT s.*, u.name as parent_name, u.email as parent_email
         FROM students s
         JOIN users u ON s.parent_id = u.id
-        WHERE s.index_no ILIKE $1 
+        WHERE s.is_approved = TRUE AND (
+          s.index_no ILIKE $1 
            OR s.first_name ILIKE $1 
            OR s.last_name ILIKE $1
            OR CONCAT(s.first_name, ' ', s.last_name) ILIKE $1
+        )
         ORDER BY s.grade, s.first_name, s.last_name
       `, [`%${query}%`]);
       
@@ -277,7 +296,173 @@ router.get('/all', requireAuth, async (req, res) => {
   }
 });
 
-// View student details (admin only)
+// Admin routes for student approval management
+
+// View pending student approvals (admin only)
+router.get('/pending-approvals', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'admin') {
+      return res.status(403).render('error', { message: 'Access denied. Admin only.' });
+    }
+    
+    const result = await db.query(`
+      SELECT s.*, u.name as parent_name, u.email as parent_email
+      FROM students s
+      JOIN users u ON s.parent_id = u.id
+      WHERE s.is_approved = FALSE
+      ORDER BY s.created_at ASC
+    `);
+    
+    res.render('students/pending-approvals', { 
+      students: result.rows,
+      user: req.session.user,
+      error: null,
+      approved: req.query.approved === 'true',
+      rejected: req.query.rejected === 'true'
+    });
+  } catch (error) {
+    console.error('Error fetching pending approvals:', error);
+    res.render('students/pending-approvals', { 
+      students: [],
+      user: req.session.user,
+      error: 'Error loading pending approvals',
+      approved: false,
+      rejected: false
+    });
+  }
+});
+
+// Approve student (admin only)
+router.post('/approve/:id', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'admin') {
+      return res.status(403).render('error', { message: 'Access denied. Admin only.' });
+    }
+    
+    const studentId = req.params.id;
+    const { approval_notes } = req.body;
+    const adminId = req.session.user.id;
+    
+    // Update student approval status
+    await db.query(`
+      UPDATE students 
+      SET is_approved = TRUE, approved_by = $1, approved_at = CURRENT_TIMESTAMP, approval_notes = $2
+      WHERE id = $3
+    `, [adminId, approval_notes || null, studentId]);
+    
+    // Mark notification as read
+    await db.query(`
+      UPDATE admin_notifications 
+      SET is_read = TRUE 
+      WHERE related_student_id = $1 AND type = 'student_added'
+    `, [studentId]);
+    
+    res.redirect('/students/pending-approvals?approved=true');
+  } catch (error) {
+    console.error('Error approving student:', error);
+    res.status(500).render('error', { message: 'Error approving student' });
+  }
+});
+
+// Reject student (admin only)
+router.post('/reject/:id', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'admin') {
+      return res.status(403).render('error', { message: 'Access denied. Admin only.' });
+    }
+    
+    const studentId = req.params.id;
+    const { rejection_reason } = req.body;
+    const adminId = req.session.user.id;
+    
+    // Get student info before deletion for notification
+    const studentResult = await db.query(`
+      SELECT s.*, u.name as parent_name, u.email as parent_email
+      FROM students s
+      JOIN users u ON s.parent_id = u.id
+      WHERE s.id = $1
+    `, [studentId]);
+    
+    if (studentResult.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Student not found' });
+    }
+    
+    const student = studentResult.rows[0];
+    
+    // Delete the student
+    await db.query('DELETE FROM students WHERE id = $1', [studentId]);
+    
+    // Mark notification as read
+    await db.query(`
+      UPDATE admin_notifications 
+      SET is_read = TRUE 
+      WHERE related_student_id = $1 AND type = 'student_added'
+    `, [studentId]);
+    
+    // Create rejection notification
+    await db.query(`
+      INSERT INTO admin_notifications (type, title, message, related_user_id) 
+      VALUES ($1, $2, $3, $4)
+    `, [
+      'student_rejected',
+      'Student Registration Rejected',
+      `Student ${student.first_name} ${student.last_name} (${student.index_no}) was rejected by admin. Reason: ${rejection_reason || 'No reason provided'}`,
+      student.parent_id
+    ]);
+    
+    res.redirect('/students/pending-approvals?rejected=true');
+  } catch (error) {
+    console.error('Error rejecting student:', error);
+    res.status(500).render('error', { message: 'Error rejecting student' });
+  }
+});
+
+// View admin notifications (admin only)
+router.get('/notifications', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'admin') {
+      return res.status(403).render('error', { message: 'Access denied. Admin only.' });
+    }
+    
+    const result = await db.query(`
+      SELECT * FROM admin_notifications 
+      ORDER BY created_at DESC 
+      LIMIT 50
+    `);
+    
+    res.render('students/notifications', { 
+      notifications: result.rows,
+      user: req.session.user,
+      error: null
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.render('students/notifications', { 
+      notifications: [],
+      user: req.session.user,
+      error: 'Error loading notifications'
+    });
+  }
+});
+
+// Mark notification as read (admin only)
+router.post('/notifications/mark-read/:id', requireAuth, async (req, res) => {
+  try {
+    if (req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    const notificationId = req.params.id;
+    await db.query('UPDATE admin_notifications SET is_read = TRUE WHERE id = $1', [notificationId]);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ error: 'Error marking notification as read' });
+  }
+});
+
+// View student details (admin only) - This must come after specific routes
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     if (req.session.user.role !== 'admin') {

@@ -39,9 +39,9 @@ router.get('/', async (req, res) => {
       if (userRole === 'parent') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'parents')`);
         
-        // Add grade-based filtering for parents
+        // Add grade-based filtering for parents (only approved students)
         const studentGradesResult = await db.query(`
-          SELECT DISTINCT grade FROM students WHERE parent_id = $1
+          SELECT DISTINCT grade FROM students WHERE parent_id = $1 AND is_approved = TRUE
         `, [req.session.user.id]);
         
         if (studentGradesResult.rows.length > 0) {
@@ -153,9 +153,12 @@ router.get('/:id', async (req, res) => {
         return res.status(403).render('error', { message: 'Access denied. This post is only visible to parents.' });
       }
     } else {
-      // For non-authenticated users, only show posts visible to all
+      // For non-authenticated users, only show posts visible to all with general target grades
       if (post.visibility !== 'all') {
         return res.status(403).render('error', { message: 'Access denied. Please log in to view this post.' });
+      }
+      if (post.target_grades !== 'all') {
+        return res.status(403).render('error', { message: 'Access denied. This post is only available to registered users.' });
       }
     }
     

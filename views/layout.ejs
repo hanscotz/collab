@@ -315,6 +315,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/posts">
                             <i class="fas fa-bullhorn me-1"></i>Announcements
+                            <% if (!isAuthenticated) { %>
+                            <small class="badge bg-light text-dark ms-1">Public</small>
+                            <% } %>
                         </a>
                     </li>
 
@@ -364,6 +367,16 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/students/all">
                             <i class="fas fa-users me-1"></i>All Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students/pending-approvals">
+                            <i class="fas fa-clock me-1"></i>Pending Approvals
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students/notifications">
+                            <i class="fas fa-bell me-1"></i>Notifications
                         </a>
                     </li>
                     <% } %>
@@ -430,8 +443,8 @@
                     <p class="mb-0">Building stronger connections between parents and schools through effective communication and collaboration.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-0">&copy; 2024 Parent-School Hub. All rights reserved.</p>
-                    <p class="mb-0">Designed for better education communication</p>
+                    <p class="mb-0">&copy; 2025 Parent-School Hub. All rights reserved.</p>
+                    <p class="mb-0">Designed by Zanzibar University Students</p>
                 </div>
             </div>
         </div>

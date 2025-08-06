@@ -88,14 +88,52 @@ app.get('/', async (req, res) => {
       return res.redirect('/auth/pending-approval');
     }
     
-    const result = await db.query(`
+    let query = `
       SELECT p.*, u.name as author_name, u.role as author_role,
              (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
       FROM posts p 
       JOIN users u ON p.user_id = u.id 
-      ORDER BY p.created_at DESC 
-      LIMIT 10
-    `);
+    `;
+    const params = [];
+    let whereClause = [];
+    
+    // Add visibility filtering based on user authentication status
+    if (req.session.user) {
+      const userRole = req.session.user.role;
+      if (userRole === 'parent') {
+        whereClause.push(`(p.visibility = 'all' OR p.visibility = 'parents')`);
+        
+        // Add grade-based filtering for parents (only approved students)
+        const studentGradesResult = await db.query(`
+          SELECT DISTINCT grade FROM students WHERE parent_id = $1 AND is_approved = TRUE
+        `, [req.session.user.id]);
+        
+        if (studentGradesResult.rows.length > 0) {
+          const studentGrades = studentGradesResult.rows.map(row => row.grade);
+          const gradeConditions = studentGrades.map(grade => `p.target_grades LIKE '%${grade}%'`);
+          gradeConditions.push(`p.target_grades = 'all'`);
+          whereClause.push(`(${gradeConditions.join(' OR ')})`);
+        } else {
+          // If parent has no students, only show general posts
+          whereClause.push(`p.target_grades = 'all'`);
+        }
+      } else if (userRole === 'teacher') {
+        whereClause.push(`(p.visibility = 'all' OR p.visibility = 'teachers')`);
+      }
+      // Admins can see all posts, so no additional filter needed
+    } else {
+      // For non-authenticated users, only show posts visible to all with general target grades
+      whereClause.push(`p.visibility = 'all'`);
+      whereClause.push(`p.target_grades = 'all'`);
+    }
+    
+    if (whereClause.length > 0) {
+      query += ' WHERE ' + whereClause.join(' AND ');
+    }
+    
+    query += ' ORDER BY p.is_pinned DESC, p.created_at DESC LIMIT 10';
+    
+    const result = await db.query(query, params);
     
     res.render('index', { 
       posts: result.rows,

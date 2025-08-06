@@ -1,0 +1,170 @@
+<%- include('../partials/header', { 
+    title: 'Pending Student Approvals - Dr. Salmin Amour Sec. School',
+    breadcrumbs: [
+        { text: 'Student Management', url: '/students/all' },
+        { text: 'Pending Approvals' }
+    ]
+}) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-clock me-2"></i>Pending Student Approvals
+                </h1>
+                <a href="/students/notifications" class="btn btn-outline-primary">
+                    <i class="fas fa-bell me-2"></i>View All Notifications
+                </a>
+            </div>
+
+            <% if (approved) { %>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Student Approved Successfully!</strong> The student has been approved and is now active in the system.
+                </div>
+            <% } %>
+
+            <% if (rejected) { %>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Student Rejected!</strong> The student registration has been rejected and removed from the system.
+                </div>
+            <% } %>
+
+            <% if (error) { %>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                </div>
+            <% } %>
+
+            <% if (students.length === 0) { %>
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-check-circle fa-3x text-success"></i>
+                        </div>
+                        <h4 class="text-success">No Pending Approvals</h4>
+                        <p class="text-muted mb-0">All student registrations have been processed.</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="row">
+                    <% students.forEach(function(student) { %>
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">
+                                            <i class="fas fa-clock me-1"></i>Pending Approval
+                                        </span>
+                                        <small><%= new Date(student.created_at).toLocaleDateString() %></small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h5 class="card-title mb-1">
+                                            <%= student.first_name %> <%= student.last_name %>
+                                        </h5>
+                                        <p class="text-muted mb-2">
+                                            <i class="fas fa-id-card me-1"></i><%= student.index_no %>
+                                        </p>
+                                        <span class="badge bg-primary"><%= student.grade %></span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="fw-bold">Parent Information:</h6>
+                                        <p class="mb-1">
+                                            <i class="fas fa-user me-1"></i><%= student.parent_name %>
+                                        </p>
+                                        <p class="mb-0">
+                                            <i class="fas fa-envelope me-1"></i><%= student.parent_email %>
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-success btn-sm" 
+                                                onclick="showApproveModal(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" 
+                                                onclick="showRejectModal(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Approve Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="approveForm" method="POST">
+                <div class="modal-body">
+                    <p>Are you sure you want to approve <strong id="approveStudentName"></strong>?</p>
+                    <div class="mb-3">
+                        <label for="approval_notes" class="form-label">Approval Notes (Optional)</label>
+                        <textarea class="form-control" id="approval_notes" name="approval_notes" rows="3" 
+                                  placeholder="Add any notes about this approval..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Approve Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm" method="POST">
+                <div class="modal-body">
+                    <p>Are you sure you want to reject <strong id="rejectStudentName"></strong>?</p>
+                    <p class="text-danger"><small>This will permanently delete the student record.</small></p>
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Rejection Reason (Optional)</label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" 
+                                  placeholder="Provide a reason for rejection..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showApproveModal(studentId, studentName) {
+    document.getElementById('approveStudentName').textContent = studentName;
+    document.getElementById('approveForm').action = `/students/approve/${studentId}`;
+    new bootstrap.Modal(document.getElementById('approveModal')).show();
+}
+
+function showRejectModal(studentId, studentName) {
+    document.getElementById('rejectStudentName').textContent = studentName;
+    document.getElementById('rejectForm').action = `/students/reject/${studentId}`;
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+</script> 

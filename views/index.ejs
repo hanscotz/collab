@@ -68,6 +68,13 @@
 
         <h2 class="mb-4">
             <i class="fas fa-bullhorn me-2"></i>Latest Announcements
+            <% if (!isAuthenticated) { %>
+            <small class="text-muted d-block mt-2">
+                <i class="fas fa-info-circle me-1"></i>Showing general announcements only. 
+                <a href="/auth/login" class="text-decoration-none">Login</a> or 
+                <a href="/auth/register" class="text-decoration-none">Register</a> to see all announcements.
+            </small>
+            <% } %>
         </h2>
         
         <% if (posts && posts.length > 0) { %>

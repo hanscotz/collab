@@ -3,6 +3,15 @@
     breadcrumbs: [{ text: 'Announcements' }]
 }) %>
 
+<% if (!user) { %>
+<div class="alert alert-info mb-4">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Public View:</strong> You're viewing general announcements only. 
+    <a href="/auth/login" class="alert-link">Login</a> or 
+    <a href="/auth/register" class="alert-link">Register</a> to see all announcements and interact with posts.
+</div>
+<% } %>
+
 <div class="row">
     <div class="col-lg-8">
         <!-- Search and Filter -->

@@ -21,6 +21,13 @@
                 </div>
             <% } %>
 
+            <% if (pendingApproval) { %>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Student Added Successfully!</strong> Your student has been submitted for admin approval. You will be notified once the approval is complete.
+                </div>
+            <% } %>
+
             <% if (students.length === 0) { %>
                 <div class="card">
                     <div class="card-body text-center py-5">
@@ -38,7 +45,7 @@
                 <div class="row">
                     <% students.forEach(function(student) { %>
                         <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100 <%= !student.is_approved ? 'border-warning' : '' %>">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
@@ -49,17 +56,37 @@
                                                 <i class="fas fa-id-card me-1"></i><%= student.index_no %>
                                             </p>
                                         </div>
-                                        <span class="badge bg-primary"><%= student.grade %></span>
+                                        <div class="text-end">
+                                            <span class="badge bg-primary mb-1"><%= student.grade %></span>
+                                            <% if (!student.is_approved) { %>
+                                                <div class="badge bg-warning text-dark">
+                                                    <i class="fas fa-clock me-1"></i>Pending Approval
+                                                </div>
+                                            <% } else { %>
+                                                <div class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Approved
+                                                </div>
+                                            <% } %>
+                                        </div>
                                     </div>
                                     
                                     <div class="mt-3">
-                                        <a href="/students/edit/<%= student.id %>" class="btn btn-outline-primary btn-sm me-2">
-                                            <i class="fas fa-edit me-1"></i>Edit
-                                        </a>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                onclick="confirmDelete(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')">
-                                            <i class="fas fa-trash me-1"></i>Delete
-                                        </button>
+                                        <% if (student.is_approved) { %>
+                                            <a href="/students/edit/<%= student.id %>" class="btn btn-outline-primary btn-sm me-2">
+                                                <i class="fas fa-edit me-1"></i>Edit
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="confirmDelete(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')">
+                                                <i class="fas fa-trash me-1"></i>Delete
+                                            </button>
+                                        <% } else { %>
+                                            <div class="alert alert-warning py-2 mb-0">
+                                                <small>
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    This student is pending admin approval. You cannot edit or delete until approved.
+                                                </small>
+                                            </div>
+                                        <% } %>
                                     </div>
                                 </div>
                             </div>
