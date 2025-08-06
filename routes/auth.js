@@ -30,20 +30,21 @@ router.post('/login', async (req, res) => {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     
     if (result.rows.length === 0) {
-      return res.render('auth/login', { error: 'Invalid email or password' });
+      return res.render('auth/login', { error: 'Invalid email or password', message: null });
     }
     
     const user = result.rows[0];
     const isValidPassword = await bcrypt.compare(password, user.password);
     
     if (!isValidPassword) {
-      return res.render('auth/login', { error: 'Invalid email or password' });
+      return res.render('auth/login', { error: 'Invalid email or password', message: null });
     }
     
     // Check if parent account is approved
     if (user.role === 'parent' && !user.is_approved) {
       return res.render('auth/login', { 
-        error: 'Your account is pending admin approval. Please contact the school administration.' 
+        error: 'Your account is pending admin approval. Please contact the school administration.',
+        message: null
       });
     }
     
@@ -58,7 +59,7 @@ router.post('/login', async (req, res) => {
     res.redirect('/');
   } catch (error) {
     console.error('Login error:', error);
-    res.render('auth/login', { error: 'An error occurred during login' });
+    res.render('auth/login', { error: 'An error occurred during login', message: null });
   }
 });
 
@@ -67,7 +68,7 @@ router.get('/register', (req, res) => {
   if (req.session.user) {
     return res.redirect('/');
   }
-  res.render('auth/register', { error: null });
+  res.render('auth/register', { error: null, message: null });
 });
 
 // Register POST
@@ -76,17 +77,17 @@ router.post('/register', async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
     
     if (password !== confirmPassword) {
-      return res.render('auth/register', { error: 'Passwords do not match' });
+      return res.render('auth/register', { error: 'Passwords do not match', message: null });
     }
     
     if (password.length < 6) {
-      return res.render('auth/register', { error: 'Password must be at least 6 characters long' });
+      return res.render('auth/register', { error: 'Password must be at least 6 characters long', message: null });
     }
     
     // Check if user already exists
     const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     if (existingUser.rows.length > 0) {
-      return res.render('auth/register', { error: 'Email already registered' });
+      return res.render('auth/register', { error: 'Email already registered', message: null });
     }
     
     // Hash password
@@ -111,7 +112,7 @@ router.post('/register', async (req, res) => {
     res.redirect('/auth/pending-approval');
   } catch (error) {
     console.error('Registration error:', error);
-    res.render('auth/register', { error: 'An error occurred during registration' });
+    res.render('auth/register', { error: 'An error occurred during registration', message: null });
   }
 });
 
