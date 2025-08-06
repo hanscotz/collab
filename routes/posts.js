@@ -24,11 +24,13 @@ router.get('/', async (req, res) => {
     const { category, search } = req.query;
     let query = `
       SELECT p.*, u.name as author_name, u.role as author_role,
+             c.name as class_name,
              (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
              (SELECT COUNT(*) FROM post_reactions WHERE post_id = p.id AND reaction_type = 'like') as like_count,
              (SELECT COUNT(*) FROM post_reactions WHERE post_id = p.id AND reaction_type = 'dislike') as dislike_count
       FROM posts p 
       JOIN users u ON p.user_id = u.id 
+      LEFT JOIN classes c ON p.class_id = c.id
     `;
     const params = [];
     let whereClause = [];
@@ -39,19 +41,30 @@ router.get('/', async (req, res) => {
       if (userRole === 'parent') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'parents')`);
         
-        // Add grade-based filtering for parents (only approved students)
-        const studentGradesResult = await db.query(`
-          SELECT DISTINCT grade FROM students WHERE parent_id = $1 AND is_approved = TRUE
+        // Add class-based filtering for parents (only approved students)
+        const studentClassesResult = await db.query(`
+          SELECT DISTINCT s.class_id, c.name as class_name 
+          FROM students s 
+          LEFT JOIN classes c ON s.class_id = c.id 
+          WHERE s.parent_id = $1 AND s.is_approved = TRUE
         `, [req.session.user.id]);
         
-        if (studentGradesResult.rows.length > 0) {
-          const studentGrades = studentGradesResult.rows.map(row => row.grade);
-          const gradeConditions = studentGrades.map(grade => `p.target_grades LIKE '%${grade}%'`);
-          gradeConditions.push(`p.target_grades = 'all'`);
-          whereClause.push(`(${gradeConditions.join(' OR ')})`);
+        if (studentClassesResult.rows.length > 0) {
+          const studentClassIds = studentClassesResult.rows.map(row => row.class_id).filter(id => id !== null);
+          const classConditions = [];
+          
+          // Posts for specific classes that the parent's children are enrolled in
+          if (studentClassIds.length > 0) {
+            classConditions.push(`p.class_id IN (${studentClassIds.join(',')})`);
+          }
+          
+          // General posts (class_id is NULL)
+          classConditions.push(`p.class_id IS NULL`);
+          
+          whereClause.push(`(${classConditions.join(' OR ')})`);
         } else {
           // If parent has no students, only show general posts
-          whereClause.push(`p.target_grades = 'all'`);
+          whereClause.push(`p.class_id IS NULL`);
         }
       } else if (userRole === 'teacher') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'teachers')`);
@@ -60,7 +73,7 @@ router.get('/', async (req, res) => {
     } else {
       // For non-authenticated users, only show posts visible to all
       whereClause.push(`p.visibility = 'all'`);
-      whereClause.push(`p.target_grades = 'all'`);
+      whereClause.push(`p.class_id IS NULL`);
     }
     
     if (category && category !== 'all') {
@@ -122,10 +135,12 @@ router.get('/:id', async (req, res) => {
     // Get post details with reaction counts
     const postResult = await db.query(`
       SELECT p.*, u.name as author_name, u.role as author_role,
+             c.name as class_name,
              (SELECT COUNT(*) FROM post_reactions WHERE post_id = p.id AND reaction_type = 'like') as like_count,
              (SELECT COUNT(*) FROM post_reactions WHERE post_id = p.id AND reaction_type = 'dislike') as dislike_count
       FROM posts p 
       JOIN users u ON p.user_id = u.id 
+      LEFT JOIN classes c ON p.class_id = c.id
       WHERE p.id = $1
     `, [postId]);
     
@@ -144,7 +159,7 @@ router.get('/:id', async (req, res) => {
       post.userReaction = userReactionResult.rows.length > 0 ? userReactionResult.rows[0].reaction_type : null;
     }
     
-    // Check visibility based on user role
+    // Check visibility based on user role and class access
     if (req.session.user) {
       const userRole = req.session.user.role;
       if (userRole === 'parent' && post.visibility === 'teachers') {
@@ -152,12 +167,26 @@ router.get('/:id', async (req, res) => {
       } else if (userRole === 'teacher' && post.visibility === 'parents') {
         return res.status(403).render('error', { message: 'Access denied. This post is only visible to parents.' });
       }
+      
+      // For parents, check if they have access to class-specific posts
+      if (userRole === 'parent' && post.class_id !== null) {
+        const studentClassesResult = await db.query(`
+          SELECT COUNT(*) as count FROM students 
+          WHERE parent_id = $1 AND class_id = $2 AND is_approved = TRUE
+        `, [req.session.user.id, post.class_id]);
+        
+        if (studentClassesResult.rows[0].count === 0) {
+          return res.status(403).render('error', { 
+            message: 'Access denied. This announcement is only for students in a specific class. Your children are not enrolled in this class.' 
+          });
+        }
+      }
     } else {
-      // For non-authenticated users, only show posts visible to all with general target grades
+      // For non-authenticated users, only show general posts
       if (post.visibility !== 'all') {
         return res.status(403).render('error', { message: 'Access denied. Please log in to view this post.' });
       }
-      if (post.target_grades !== 'all') {
+      if (post.class_id !== null) {
         return res.status(403).render('error', { message: 'Access denied. This post is only available to registered users.' });
       }
     }
@@ -185,7 +214,7 @@ router.get('/:id', async (req, res) => {
 // Create new post (admin only)
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
   try {
-    const { title, content, category, visibility, target_grades } = req.body;
+    const { title, content, category, visibility, class_id } = req.body;
     
     if (!title || !content || !visibility) {
       return res.render('posts/new', { 
@@ -194,9 +223,12 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       });
     }
     
+    // Convert empty string to null for class_id
+    const classId = class_id === '' ? null : parseInt(class_id);
+    
     const result = await db.query(
-      'INSERT INTO posts (title, content, category, visibility, target_grades, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [title, content, category || 'general', visibility, target_grades || 'all', req.session.user.id]
+      'INSERT INTO posts (title, content, category, visibility, class_id, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [title, content, category || 'general', visibility, classId, req.session.user.id]
     );
     
     res.redirect(`/posts/${result.rows[0].id}`);
@@ -237,7 +269,7 @@ router.get('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
 router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
   try {
     const postId = req.params.id;
-    const { title, content, category, visibility, target_grades } = req.body;
+    const { title, content, category, visibility, class_id } = req.body;
     
     if (!title || !content || !visibility) {
       return res.status(400).render('error', { message: 'Title, content, and visibility are required' });
@@ -254,9 +286,12 @@ router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
       return res.status(403).render('error', { message: 'Access denied. Admin only.' });
     }
     
+    // Convert empty string to null for class_id
+    const classId = class_id === '' ? null : parseInt(class_id);
+    
     await db.query(
-      'UPDATE posts SET title = $1, content = $2, category = $3, visibility = $4, target_grades = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6',
-      [title, content, category || 'general', visibility, target_grades || 'all', postId]
+      'UPDATE posts SET title = $1, content = $2, category = $3, visibility = $4, class_id = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6',
+      [title, content, category || 'general', visibility, classId, postId]
     );
     
     res.redirect(`/posts/${postId}`);

@@ -90,9 +90,11 @@ app.get('/', async (req, res) => {
     
     let query = `
       SELECT p.*, u.name as author_name, u.role as author_role,
+             c.name as class_name,
              (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
       FROM posts p 
       JOIN users u ON p.user_id = u.id 
+      LEFT JOIN classes c ON p.class_id = c.id
     `;
     const params = [];
     let whereClause = [];
@@ -103,28 +105,39 @@ app.get('/', async (req, res) => {
       if (userRole === 'parent') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'parents')`);
         
-        // Add grade-based filtering for parents (only approved students)
-        const studentGradesResult = await db.query(`
-          SELECT DISTINCT grade FROM students WHERE parent_id = $1 AND is_approved = TRUE
+        // Add class-based filtering for parents (only approved students)
+        const studentClassesResult = await db.query(`
+          SELECT DISTINCT s.class_id, c.name as class_name 
+          FROM students s 
+          LEFT JOIN classes c ON s.class_id = c.id 
+          WHERE s.parent_id = $1 AND s.is_approved = TRUE
         `, [req.session.user.id]);
         
-        if (studentGradesResult.rows.length > 0) {
-          const studentGrades = studentGradesResult.rows.map(row => row.grade);
-          const gradeConditions = studentGrades.map(grade => `p.target_grades LIKE '%${grade}%'`);
-          gradeConditions.push(`p.target_grades = 'all'`);
-          whereClause.push(`(${gradeConditions.join(' OR ')})`);
+        if (studentClassesResult.rows.length > 0) {
+          const studentClassIds = studentClassesResult.rows.map(row => row.class_id).filter(id => id !== null);
+          const classConditions = [];
+          
+          // Posts for specific classes that the parent's children are enrolled in
+          if (studentClassIds.length > 0) {
+            classConditions.push(`p.class_id IN (${studentClassIds.join(',')})`);
+          }
+          
+          // General posts (class_id is NULL)
+          classConditions.push(`p.class_id IS NULL`);
+          
+          whereClause.push(`(${classConditions.join(' OR ')})`);
         } else {
           // If parent has no students, only show general posts
-          whereClause.push(`p.target_grades = 'all'`);
+          whereClause.push(`p.class_id IS NULL`);
         }
       } else if (userRole === 'teacher') {
         whereClause.push(`(p.visibility = 'all' OR p.visibility = 'teachers')`);
       }
       // Admins can see all posts, so no additional filter needed
     } else {
-      // For non-authenticated users, only show posts visible to all with general target grades
+      // For non-authenticated users, only show general posts
       whereClause.push(`p.visibility = 'all'`);
-      whereClause.push(`p.target_grades = 'all'`);
+      whereClause.push(`p.class_id IS NULL`);
     }
     
     if (whereClause.length > 0) {

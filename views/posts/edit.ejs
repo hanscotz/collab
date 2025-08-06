@@ -46,21 +46,20 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="target_grades" class="form-label">Target Grades</label>
-                        <select class="form-select" id="target_grades" name="target_grades">
-                            <option value="all" <%= post.target_grades === 'all' ? 'selected' : '' %>>All Grades</option>
-                            <option value="Form I" <%= post.target_grades === 'Form I' ? 'selected' : '' %>>Form I Only</option>
-                            <option value="Form II" <%= post.target_grades === 'Form II' ? 'selected' : '' %>>Form II Only</option>
-                            <option value="Form III" <%= post.target_grades === 'Form III' ? 'selected' : '' %>>Form III Only</option>
-                            <option value="Form IV" <%= post.target_grades === 'Form IV' ? 'selected' : '' %>>Form IV Only</option>
-                            <option value="Form I,Form II" <%= post.target_grades === 'Form I,Form II' ? 'selected' : '' %>>Form I & II</option>
-                            <option value="Form III,Form IV" <%= post.target_grades === 'Form III,Form IV' ? 'selected' : '' %>>Form III & IV</option>
-                            <option value="Form I,Form III" <%= post.target_grades === 'Form I,Form III' ? 'selected' : '' %>>Form I & III</option>
-                            <option value="Form I,Form IV" <%= post.target_grades === 'Form I,Form IV' ? 'selected' : '' %>>Form I & IV</option>
-                            <option value="Form II,Form III" <%= post.target_grades === 'Form II,Form III' ? 'selected' : '' %>>Form II & III</option>
+                        <label for="class_id" class="form-label">Target Class</label>
+                        <select class="form-select" id="class_id" name="class_id">
+                            <option value="" <%= !post.class_id ? 'selected' : '' %>>General Announcement (All Classes)</option>
+                            <option value="1" <%= post.class_id === 1 ? 'selected' : '' %>>Form I A</option>
+                            <option value="2" <%= post.class_id === 2 ? 'selected' : '' %>>Form I B</option>
+                            <option value="3" <%= post.class_id === 3 ? 'selected' : '' %>>Form II A</option>
+                            <option value="4" <%= post.class_id === 4 ? 'selected' : '' %>>Form II B</option>
+                            <option value="5" <%= post.class_id === 5 ? 'selected' : '' %>>Form III A</option>
+                            <option value="6" <%= post.class_id === 6 ? 'selected' : '' %>>Form III B</option>
+                            <option value="7" <%= post.class_id === 7 ? 'selected' : '' %>>Form IV A</option>
+                            <option value="8" <%= post.class_id === 8 ? 'selected' : '' %>>Form IV B</option>
                         </select>
                         <small class="form-text text-muted">
-                            Select specific grades for targeted announcements (parents will only see announcements relevant to their children's grades)
+                            Select a specific class for targeted announcements (parents will only see announcements for classes their children are enrolled in)
                         </small>
                     </div>
                     

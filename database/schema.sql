@@ -1,6 +1,6 @@
 -- Create database (run this separately if needed)
 -- CREATE DATABASE parent_school_collab;
-
+-
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
