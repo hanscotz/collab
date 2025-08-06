@@ -1,0 +1,106 @@
+<%- include('../partials/header', { 
+    title: 'Edit Child',
+    breadcrumbs: [{ text: 'My Children', link: '/students/my-children' }, { text: 'Edit Child' }]
+}) %>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Child Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                        </div>
+                    <% } %>
+
+                    <form action="/students/my-children/<%= student.id %>/edit" method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="index_no" class="form-label">Index Number *</label>
+                                <input type="text" class="form-control" id="index_no" name="index_no" value="<%= student.index_no %>" required>
+                                <div class="form-text">Unique student identification number</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="grade" class="form-label">Grade *</label>
+                                <select class="form-select" id="grade" name="grade" required>
+                                    <option value="">Select Grade</option>
+                                    <option value="Form I" <%= student.grade === 'Form I' ? 'selected' : '' %>>Form I</option>
+                                    <option value="Form II" <%= student.grade === 'Form II' ? 'selected' : '' %>>Form II</option>
+                                    <option value="Form III" <%= student.grade === 'Form III' ? 'selected' : '' %>>Form III</option>
+                                    <option value="Form IV" <%= student.grade === 'Form IV' ? 'selected' : '' %>>Form IV</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="<%= student.first_name %>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="<%= student.last_name %>" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="class_id" class="form-label">Class (Optional)</label>
+                            <select class="form-select" id="class_id" name="class_id">
+                                <option value="">Select Class (Optional)</option>
+                                <% classes.forEach(function(classItem) { %>
+                                    <option value="<%= classItem.id %>" <%= student.class_id == classItem.id ? 'selected' : '' %>>
+                                        <%= classItem.name %> (Grade <%= classItem.grade %>)
+                                    </option>
+                                <% }); %>
+                            </select>
+                            <div class="form-text">You can select a specific class or leave this blank</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Important Information</h6>
+                            <ul class="mb-0">
+                                <li>All fields marked with * are required</li>
+                                <li>Changes will be applied immediately</li>
+                                <li>If the approval status changes, it will be updated accordingly</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/students/my-children" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to My Children
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Child
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border-bottom: none;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+}
+</style>
+
+<%- include('../partials/footer') %> 

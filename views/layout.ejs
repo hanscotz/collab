@@ -356,6 +356,13 @@
                         </a>
                     </li>
                     <% } %>
+                    <% if (user.role === 'parent' && user.is_approved) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/students/my-children">
+                            <i class="fas fa-child me-1"></i>My Children
+                        </a>
+                    </li>
+                    <% } %>
                     <% } %>
                     
                     <% if (isAuthenticated) { %>

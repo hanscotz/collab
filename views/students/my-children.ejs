@@ -1,6 +1,6 @@
 <%- include('../partials/header', { 
-    title: 'Students Management',
-    breadcrumbs: [{ text: 'Students' }]
+    title: 'My Children',
+    breadcrumbs: [{ text: 'My Children' }]
 }) %>
 
 <div class="container">
@@ -8,10 +8,10 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">
-                    <i class="fas fa-user-graduate me-2"></i>Students Management
+                    <i class="fas fa-child me-2"></i>My Children
                 </h1>
-                <a href="/students/new" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Add New Student
+                <a href="/students/my-children/add" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add New Child
                 </a>
             </div>
 
@@ -23,32 +23,32 @@
 
             <% if (typeof success !== 'undefined' && success) { %>
                 <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>Student approved successfully!
+                    <i class="fas fa-check-circle me-2"></i>Child added successfully! They will be reviewed by an administrator.
                 </div>
             <% } %>
 
             <% if (typeof updated !== 'undefined' && updated) { %>
                 <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>Student updated successfully!
+                    <i class="fas fa-check-circle me-2"></i>Child information updated successfully!
                 </div>
             <% } %>
 
             <% if (typeof deleted !== 'undefined' && deleted) { %>
                 <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>Student deleted successfully!
+                    <i class="fas fa-check-circle me-2"></i>Child removed successfully!
                 </div>
             <% } %>
 
-            <% if (students.length === 0) { %>
+            <% if (children.length === 0) { %>
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <div class="mb-3">
-                            <i class="fas fa-user-graduate fa-3x text-muted"></i>
+                            <i class="fas fa-child fa-3x text-muted"></i>
                         </div>
-                        <h4 class="text-muted">No Students Found</h4>
-                        <p class="text-muted mb-4">Start by adding students to the system.</p>
-                        <a href="/students/new" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Add First Student
+                        <h4 class="text-muted">No Children Found</h4>
+                        <p class="text-muted mb-4">Start by adding your children to the system.</p>
+                        <a href="/students/my-children/add" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add First Child
                         </a>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-list me-2"></i>All Students (<%= students.length %>)
+                            <i class="fas fa-list me-2"></i>My Children (<%= children.length %>)
                         </h5>
                     </div>
                     <div class="card-body p-0">
@@ -68,64 +68,49 @@
                                         <th>Name</th>
                                         <th>Grade</th>
                                         <th>Class</th>
-                                        <th>Parent</th>
-                                        <th>Parent Email</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% students.forEach(function(student) { %>
+                                    <% children.forEach(function(child) { %>
                                         <tr>
                                             <td>
-                                                <strong><%= student.index_no %></strong>
+                                                <strong><%= child.index_no %></strong>
                                             </td>
                                             <td>
-                                                <%= student.first_name %> <%= student.last_name %>
+                                                <%= child.first_name %> <%= child.last_name %>
                                             </td>
                                             <td>
-                                                <span class="badge bg-primary"><%= student.grade %></span>
+                                                <span class="badge bg-primary"><%= child.grade %></span>
                                             </td>
                                             <td>
-                                                <% if (student.class_name) { %>
+                                                <% if (child.class_name) { %>
                                                     <span class="badge bg-secondary">
-                                                        <i class="fas fa-graduation-cap me-1"></i><%= student.class_name %>
+                                                        <i class="fas fa-graduation-cap me-1"></i><%= child.class_name %>
                                                     </span>
                                                 <% } else { %>
                                                     <span class="text-muted">Not assigned</span>
                                                 <% } %>
                                             </td>
                                             <td>
-                                                <%= student.parent_name || 'Not assigned' %>
-                                            </td>
-                                            <td>
-                                                <%= student.parent_email || 'N/A' %>
-                                            </td>
-                                            <td>
-                                                <% if (student.is_approved) { %>
+                                                <% if (child.is_approved) { %>
                                                     <span class="badge bg-success">
                                                         <i class="fas fa-check me-1"></i>Approved
                                                     </span>
                                                 <% } else { %>
                                                     <span class="badge bg-warning">
-                                                        <i class="fas fa-clock me-1"></i>Pending
+                                                        <i class="fas fa-clock me-1"></i>Pending Approval
                                                     </span>
                                                 <% } %>
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
-                                                    <% if (!student.is_approved) { %>
-                                                        <button type="button" class="btn btn-outline-success" 
-                                                                onclick="approveStudent(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')" 
-                                                                title="Approve">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                    <% } %>
-                                                    <a href="/students/<%= student.id %>/edit" class="btn btn-outline-primary" title="Edit">
+                                                    <a href="/students/my-children/<%= child.id %>/edit" class="btn btn-outline-primary" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-outline-danger" 
-                                                            onclick="confirmDelete(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')" 
+                                                            onclick="confirmDelete(<%= child.id %>, '<%= child.first_name %> <%= child.last_name %>')" 
                                                             title="Delete">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
@@ -141,8 +126,7 @@
 
                 <div class="alert alert-info mt-4">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Note:</strong> Students are automatically linked to their parents and classes. 
-                    Class assignments determine which announcements they can see.
+                    <strong>Note:</strong> New children added will require administrator approval before they can access class-specific announcements.
                 </div>
             <% } %>
         </div>
@@ -158,7 +142,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete <strong id="studentName"></strong>?</p>
+                <p>Are you sure you want to remove <strong id="childName"></strong>?</p>
                 <p class="text-danger"><small>This action cannot be undone.</small></p>
             </div>
             <div class="modal-footer">
@@ -171,42 +155,14 @@
     </div>
 </div>
 
-<!-- Approve Student Modal -->
-<div class="modal fade" id="approveModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Approval</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to approve <strong id="approveStudentName"></strong>?</p>
-                <p class="text-success"><small>This will allow the student to access class-specific announcements.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="approveForm" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-success">Approve</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-function confirmDelete(studentId, studentName) {
-    document.getElementById('studentName').textContent = studentName;
-    document.getElementById('deleteForm').action = `/students/${studentId}/delete`;
+function confirmDelete(childId, childName) {
+    document.getElementById('childName').textContent = childName;
+    document.getElementById('deleteForm').action = `/students/my-children/${childId}/delete`;
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();
 }
+</script>
 
-function approveStudent(studentId, studentName) {
-    document.getElementById('approveStudentName').textContent = studentName;
-    document.getElementById('approveForm').action = `/students/${studentId}/approve`;
-    
-    const modal = new bootstrap.Modal(document.getElementById('approveModal'));
-    modal.show();
-}
-</script> 
+<%- include('../partials/footer') %> 

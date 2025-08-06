@@ -1,0 +1,105 @@
+<%- include('../partials/header', { 
+    title: 'Add New Child',
+    breadcrumbs: [{ text: 'My Children', link: '/students/my-children' }, { text: 'Add New Child' }]
+}) %>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Add New Child
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                        </div>
+                    <% } %>
+
+                    <form action="/students/my-children/add" method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="index_no" class="form-label">Index Number *</label>
+                                <input type="text" class="form-control" id="index_no" name="index_no" required>
+                                <div class="form-text">Unique student identification number</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="grade" class="form-label">Grade *</label>
+                                <select class="form-select" id="grade" name="grade" required>
+                                    <option value="">Select Grade</option>
+                                    <option value="Form I">Form I</option>
+                                    <option value="Form II">Form II</option>
+                                    <option value="Form III">Form III</option>
+                                    <option value="Form IV">Form IV</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="class_id" class="form-label">Class (Optional)</label>
+                            <select class="form-select" id="class_id" name="class_id">
+                                <option value="">Select Class (Optional)</option>
+                                <% classes.forEach(function(classItem) { %>
+                                    <option value="<%= classItem.id %>"><%= classItem.name %> (Grade <%= classItem.grade %>)</option>
+                                <% }); %>
+                            </select>
+                            <div class="form-text">You can select a specific class or leave this blank</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Important Information</h6>
+                            <ul class="mb-0">
+                                <li>All fields marked with * are required</li>
+                                <li>Your child will be reviewed by an administrator</li>
+                                <li>You will be notified once they are approved</li>
+                                <li>Only approved children will be able to access class-specific announcements</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/students/my-children" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to My Children
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Child
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border-bottom: none;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+}
+</style>
+
+<%- include('../partials/footer') %> 
