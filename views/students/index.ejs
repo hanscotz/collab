@@ -52,6 +52,7 @@
                                         <th>Class</th>
                                         <th>Parent</th>
                                         <th>Parent Email</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -83,7 +84,25 @@
                                                 <%= student.parent_email || 'N/A' %>
                                             </td>
                                             <td>
+                                                <% if (student.is_approved) { %>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Approved
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>Pending
+                                                    </span>
+                                                <% } %>
+                                            </td>
+                                            <td>
                                                 <div class="btn-group btn-group-sm" role="group">
+                                                    <% if (!student.is_approved) { %>
+                                                        <button type="button" class="btn btn-outline-success" 
+                                                                onclick="approveStudent(<%= student.id %>, '<%= student.first_name %> <%= student.last_name %>')" 
+                                                                title="Approve">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    <% } %>
                                                     <a href="/students/<%= student.id %>/edit" class="btn btn-outline-primary" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
@@ -134,12 +153,42 @@
     </div>
 </div>
 
+<!-- Approve Student Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Approval</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve <strong id="approveStudentName"></strong>?</p>
+                <p class="text-success"><small>This will allow the student to access class-specific announcements.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="approveForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-success">Approve</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function confirmDelete(studentId, studentName) {
     document.getElementById('studentName').textContent = studentName;
     document.getElementById('deleteForm').action = `/students/${studentId}/delete`;
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function approveStudent(studentId, studentName) {
+    document.getElementById('approveStudentName').textContent = studentName;
+    document.getElementById('approveForm').action = `/students/${studentId}/approve`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('approveModal'));
     modal.show();
 }
 </script> 

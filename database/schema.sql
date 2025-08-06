@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS students (
     last_name VARCHAR(50) NOT NULL,
     grade VARCHAR(10) NOT NULL CHECK (grade IN ('Form I', 'Form II', 'Form III', 'Form IV')),
     parent_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+    is_approved BOOLEAN DEFAULT TRUE, -- FALSE for students added by unapproved parents
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

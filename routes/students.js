@@ -18,6 +18,81 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware to check if user is an unapproved parent
+const requireUnapprovedParent = (req, res, next) => {
+  if (!req.session.user || req.session.user.role !== 'parent' || req.session.user.is_approved) {
+    return res.status(403).render('error', { message: 'Access denied. Unapproved parents only.' });
+  }
+  next();
+};
+
+// Add my children form (unapproved parents only)
+router.get('/add-my-children', requireAuth, requireUnapprovedParent, async (req, res) => {
+  try {
+    // Get all classes for dropdown
+    const classesResult = await db.query('SELECT id, name, grade FROM classes ORDER BY grade, name');
+    
+    // Get existing children of this parent
+    const childrenResult = await db.query(`
+      SELECT s.*, c.name as class_name 
+      FROM students s 
+      LEFT JOIN classes c ON s.class_id = c.id 
+      WHERE s.parent_id = $1 
+      ORDER BY s.grade, s.first_name, s.last_name
+    `, [req.session.user.id]);
+    
+    res.render('students/add-my-children', { 
+      classes: classesResult.rows,
+      children: childrenResult.rows,
+      user: req.session.user,
+      success: req.query.success === 'true'
+    });
+  } catch (error) {
+    console.error('Error loading add children form:', error);
+    res.status(500).render('error', { message: 'Error loading form' });
+  }
+});
+
+// Create new child (unapproved parents only)
+router.post('/add-my-children', requireAuth, requireUnapprovedParent, async (req, res) => {
+  try {
+    const { index_no, first_name, last_name, grade, class_id } = req.body;
+    const parentId = req.session.user.id;
+    
+    if (!index_no || !first_name || !last_name || !grade) {
+      return res.render('students/add-my-children', { 
+        user: req.session.user,
+        error: 'All fields except class are required'
+      });
+    }
+    
+    // Check if student index number already exists
+    const existingStudent = await db.query('SELECT * FROM students WHERE index_no = $1', [index_no]);
+    if (existingStudent.rows.length > 0) {
+      return res.render('students/add-my-children', { 
+        user: req.session.user,
+        error: 'Student with this index number already exists'
+      });
+    }
+    
+    // Convert empty string to null for class_id
+    const classId = class_id === '' ? null : parseInt(class_id);
+    
+    const result = await db.query(
+      'INSERT INTO students (index_no, first_name, last_name, grade, parent_id, class_id, is_approved) VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING *',
+      [index_no, first_name, last_name, grade, parentId, classId]
+    );
+    
+    res.redirect('/students/add-my-children?success=true');
+  } catch (error) {
+    console.error('Error creating child:', error);
+    res.render('students/add-my-children', { 
+      user: req.session.user,
+      error: 'Error creating child'
+    });
+  }
+});
+
 // View all students (admin only)
 router.get('/', requireAuth, requireAdmin, async (req, res) => {
   try {
@@ -167,6 +242,25 @@ router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error updating student:', error);
     res.status(500).render('error', { message: 'Error updating student' });
+  }
+});
+
+// Approve student (admin only)
+router.post('/:id/approve', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    
+    // Check if student exists
+    const studentResult = await db.query('SELECT * FROM students WHERE id = $1', [studentId]);
+    if (studentResult.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Student not found' });
+    }
+    
+    await db.query('UPDATE students SET is_approved = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [studentId]);
+    res.redirect('/students');
+  } catch (error) {
+    console.error('Error approving student:', error);
+    res.status(500).render('error', { message: 'Error approving student' });
   }
 });
 
