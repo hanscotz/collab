@@ -50,22 +50,18 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="class_id" class="form-label">Class (Optional)</label>
-                            <select class="form-select" id="class_id" name="class_id">
-                                <option value="">Select Class (Optional)</option>
-                                <% classes.forEach(function(classItem) { %>
-                                    <option value="<%= classItem.id %>" <%= student.class_id == classItem.id ? 'selected' : '' %>>
-                                        <%= classItem.name %> (Grade <%= classItem.grade %>)
-                                    </option>
-                                <% }); %>
+                            <label for="class_id" class="form-label">Class Section *</label>
+                            <select class="form-select" id="class_id" name="class_id" required>
+                                <option value="">Select Section</option>
                             </select>
-                            <div class="form-text">You can select a specific class or leave this blank</div>
+                            <div class="form-text">Select the specific section (A, B, C, or D) for the chosen grade</div>
                         </div>
 
                         <div class="alert alert-info">
                             <h6><i class="fas fa-info-circle me-2"></i>Important Information</h6>
                             <ul class="mb-0">
                                 <li>All fields marked with * are required</li>
+                                <li>Select a grade first, then choose the appropriate section</li>
                                 <li>Changes will be applied immediately</li>
                                 <li>If the approval status changes, it will be updated accordingly</li>
                             </ul>
@@ -85,6 +81,52 @@
         </div>
     </div>
 </div>
+
+<script>
+// Store current class ID for pre-selection
+const currentClassId = '<%= student.class_id %>';
+
+// Dynamic class loading based on grade selection
+document.getElementById('grade').addEventListener('change', function() {
+    const grade = this.value;
+    const classSelect = document.getElementById('class_id');
+    
+    // Clear current options
+    classSelect.innerHTML = '<option value="">Select Section</option>';
+    
+    if (grade) {
+        // Fetch classes for the selected grade
+        fetch(`/students/api/classes/${encodeURIComponent(grade)}`)
+            .then(response => response.json())
+            .then(classes => {
+                classes.forEach(classItem => {
+                    const option = document.createElement('option');
+                    option.value = classItem.id;
+                    option.textContent = `${classItem.name} (Section ${classItem.section})`;
+                    
+                    // Pre-select if this was the current class
+                    if (classItem.id == currentClassId) {
+                        option.selected = true;
+                    }
+                    
+                    classSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading classes:', error);
+                classSelect.innerHTML = '<option value="">Error loading sections</option>';
+            });
+    }
+});
+
+// Load classes on page load if grade is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    const gradeSelect = document.getElementById('grade');
+    if (gradeSelect.value) {
+        gradeSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 
 <style>
 .card {

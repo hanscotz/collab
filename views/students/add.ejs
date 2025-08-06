@@ -83,6 +83,19 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="class_id" class="form-label">Class Section *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-chalkboard"></i>
+                            </span>
+                            <select class="form-select" id="class_id" name="class_id" required>
+                                <option value="">First select a Grade</option>
+                            </select>
+                        </div>
+                        <small class="form-text text-muted">Select the specific section (A, B, C, or D) for the chosen grade</small>
+                    </div>
+
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Important:</strong> Please ensure all information is accurate. This will be used for grade-specific announcements and communications.
@@ -100,4 +113,33 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<script>
+// Dynamic class loading based on grade selection
+document.getElementById('grade').addEventListener('change', function() {
+    const grade = this.value;
+    const classSelect = document.getElementById('class_id');
+    
+    // Clear current options
+    classSelect.innerHTML = '<option value="">Select Section</option>';
+    
+    if (grade) {
+        // Fetch classes for the selected grade
+        fetch(`/students/api/classes/${encodeURIComponent(grade)}`)
+            .then(response => response.json())
+            .then(classes => {
+                classes.forEach(classItem => {
+                    const option = document.createElement('option');
+                    option.value = classItem.id;
+                    option.textContent = `${classItem.name} (Section ${classItem.section})`;
+                    classSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading classes:', error);
+                classSelect.innerHTML = '<option value="">Error loading sections</option>';
+            });
+    }
+});
+</script> 

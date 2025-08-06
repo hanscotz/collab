@@ -18,10 +18,8 @@ CREATE TABLE IF NOT EXISTS classes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     grade VARCHAR(10) NOT NULL CHECK (grade IN ('Form I', 'Form II', 'Form III', 'Form IV')),
-    section VARCHAR(5) NOT NULL CHECK (section IN ('A', 'B', 'C', 'D')),
     teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(grade, section) -- Ensure unique grade-section combinations
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Students table
@@ -141,54 +139,4 @@ CREATE INDEX IF NOT EXISTS idx_students_parent_approved ON students(parent_id, i
 CREATE INDEX IF NOT EXISTS idx_users_is_approved ON users(is_approved);
 CREATE INDEX IF NOT EXISTS idx_users_role_approved ON users(role, is_approved);
 CREATE INDEX IF NOT EXISTS idx_classes_grade ON classes(grade);
-CREATE INDEX IF NOT EXISTS idx_classes_section ON classes(section);
-CREATE INDEX IF NOT EXISTS idx_classes_grade_section ON classes(grade, section);
 CREATE INDEX IF NOT EXISTS idx_classes_teacher_id ON classes(teacher_id);
-
--- Insert default users for development/testing
--- Note: Passwords are hashed versions of 'password123' - change in production!
-
--- Default Admin User
-INSERT INTO users (name, email, password, role, is_approved) VALUES 
-('System Administrator', 'admin@school.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'admin', TRUE);
-
--- Default Teachers
-INSERT INTO users (name, email, password, role, is_approved) VALUES 
-('John Smith', 'john.smith@school.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'teacher', TRUE),
-('Sarah Johnson', 'sarah.johnson@school.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'teacher', TRUE),
-('Michael Brown', 'michael.brown@school.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'teacher', TRUE);
-
--- Default Parents
-INSERT INTO users (name, email, password, role, is_approved) VALUES 
-('David Wilson', 'david.wilson@email.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'parent', TRUE),
-('Lisa Davis', 'lisa.davis@email.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'parent', TRUE),
-('Robert Miller', 'robert.miller@email.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'parent', TRUE),
-('Jennifer Garcia', 'jennifer.garcia@email.com', '$2b$10$rQZ8K9mN2pL5vX7wY1tA3eF6gH8iJ4kL7mN9oP2qR5sT8uV1wX4yZ7aB0cD3eF', 'parent', TRUE);
-
--- Insert default classes
-INSERT INTO classes (name, grade, section, teacher_id) VALUES 
-('Form I - Section A', 'Form I', 'A', 2),
-('Form I - Section B', 'Form I', 'B', 2),
-('Form I - Section C', 'Form I', 'C', 3),
-('Form I - Section D', 'Form I', 'D', 3),
-('Form II - Section A', 'Form II', 'A', 4),
-('Form II - Section B', 'Form II', 'B', 4),
-('Form II - Section C', 'Form II', 'C', 2),
-('Form II - Section D', 'Form II', 'D', 2),
-('Form III - Section A', 'Form III', 'A', 3),
-('Form III - Section B', 'Form III', 'B', 3),
-('Form III - Section C', 'Form III', 'C', 4),
-('Form III - Section D', 'Form III', 'D', 4),
-('Form IV - Section A', 'Form IV', 'A', 2),
-('Form IV - Section B', 'Form IV', 'B', 2),
-('Form IV - Section C', 'Form IV', 'C', 3),
-('Form IV - Section D', 'Form IV', 'D', 3);
-
--- Insert default students
-INSERT INTO students (index_no, first_name, last_name, grade, parent_id, class_id) VALUES 
-('F1A-001', 'Emma', 'Wilson', 'Form I', 5, 1),
-('F1A-002', 'James', 'Davis', 'Form I', 6, 1),
-('F1B-001', 'Sophia', 'Miller', 'Form I', 7, 2),
-('F2A-001', 'William', 'Garcia', 'Form II', 8, 5),
-('F3A-001', 'Olivia', 'Taylor', 'Form III', 5, 9),
-('F4A-001', 'Noah', 'Anderson', 'Form IV', 6, 13);

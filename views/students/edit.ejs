@@ -90,19 +90,16 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="class_id" class="form-label">Class (Optional)</label>
+                                <label for="class_id" class="form-label">Class Section *</label>
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-chalkboard"></i>
                                     </span>
-                                    <select class="form-select" id="class_id" name="class_id">
-                                        <option value="">No Class Assignment</option>
-                                        <% classes.forEach(function(classItem) { %>
-                                            <option value="<%= classItem.id %>" <%= student.class_id == classItem.id ? 'selected' : '' %>><%= classItem.name %> (<%= classItem.grade %>)</option>
-                                        <% }); %>
+                                    <select class="form-select" id="class_id" name="class_id" required>
+                                        <option value="">Select Section</option>
                                     </select>
                                 </div>
-                                <small class="form-text text-muted">Class assignment affects announcement visibility</small>
+                                <small class="form-text text-muted">Select the specific section (A, B, C, or D) for the chosen grade</small>
                             </div>
                         </div>
                     </div>
@@ -110,7 +107,7 @@
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Note:</strong> Class assignments determine which announcements students can see. 
-                        Students without class assignments will only see general announcements.
+                        Students will be assigned to the specific section (A, B, C, or D) of the selected grade.
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -125,4 +122,50 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<script>
+// Store current class ID for pre-selection
+const currentClassId = '<%= student.class_id %>';
+
+// Dynamic class loading based on grade selection
+document.getElementById('grade').addEventListener('change', function() {
+    const grade = this.value;
+    const classSelect = document.getElementById('class_id');
+    
+    // Clear current options
+    classSelect.innerHTML = '<option value="">Select Section</option>';
+    
+    if (grade) {
+        // Fetch classes for the selected grade
+        fetch(`/students/api/classes/${encodeURIComponent(grade)}`)
+            .then(response => response.json())
+            .then(classes => {
+                classes.forEach(classItem => {
+                    const option = document.createElement('option');
+                    option.value = classItem.id;
+                    option.textContent = `${classItem.name} (Section ${classItem.section})`;
+                    
+                    // Pre-select if this was the current class
+                    if (classItem.id == currentClassId) {
+                        option.selected = true;
+                    }
+                    
+                    classSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading classes:', error);
+                classSelect.innerHTML = '<option value="">Error loading sections</option>';
+            });
+    }
+});
+
+// Load classes on page load if grade is already selected
+document.addEventListener('DOMContentLoaded', function() {
+    const gradeSelect = document.getElementById('grade');
+    if (gradeSelect.value) {
+        gradeSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script> 

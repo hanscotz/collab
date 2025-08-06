@@ -68,14 +68,14 @@ router.post('/add-my-children', requireAuth, requireUnapprovedParent, async (req
     const { index_no, first_name, last_name, grade, class_id } = req.body;
     const parentId = req.session.user.id;
     
-    if (!index_no || !first_name || !last_name || !grade) {
-      return     res.render('students/add-my-children', { 
-      user: req.session.user,
-      error: 'All fields except class are required',
-      classes: [],
-      children: [],
-      success: false
-    });
+    if (!index_no || !first_name || !last_name || !grade || !class_id) {
+      return res.render('students/add-my-children', { 
+        user: req.session.user,
+        error: 'All fields are required',
+        classes: [],
+        children: [],
+        success: false
+      });
     }
     
     // Check if student index number already exists
@@ -90,8 +90,7 @@ router.post('/add-my-children', requireAuth, requireUnapprovedParent, async (req
       });
     }
     
-    // Convert empty string to null for class_id
-    const classId = class_id === '' ? null : parseInt(class_id);
+    const classId = parseInt(class_id);
     
     const result = await db.query(
       'INSERT INTO students (index_no, first_name, last_name, grade, parent_id, class_id, is_approved) VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING *',
@@ -166,10 +165,10 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { index_no, first_name, last_name, grade, parent_id, class_id } = req.body;
     
-    if (!index_no || !first_name || !last_name || !grade || !parent_id) {
+    if (!index_no || !first_name || !last_name || !grade || !parent_id || !class_id) {
       return res.render('students/new', { 
         user: req.session.user,
-        error: 'All fields except class are required',
+        error: 'All fields are required',
         parents: [],
         classes: []
       });
@@ -186,8 +185,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       });
     }
     
-    // Convert empty string to null for class_id
-    const classId = class_id === '' ? null : parseInt(class_id);
+    const classId = parseInt(class_id);
     
     const result = await db.query(
       'INSERT INTO students (index_no, first_name, last_name, grade, parent_id, class_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
@@ -244,8 +242,8 @@ router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
     const studentId = req.params.id;
     const { index_no, first_name, last_name, grade, parent_id, class_id } = req.body;
     
-    if (!index_no || !first_name || !last_name || !grade || !parent_id) {
-      return res.status(400).render('error', { message: 'All fields except class are required' });
+    if (!index_no || !first_name || !last_name || !grade || !parent_id || !class_id) {
+      return res.status(400).render('error', { message: 'All fields are required' });
     }
     
     // Check if student exists
@@ -260,8 +258,7 @@ router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).render('error', { message: 'Student with this index number already exists' });
     }
     
-    // Convert empty string to null for class_id
-    const classId = class_id === '' ? null : parseInt(class_id);
+    const classId = parseInt(class_id);
     
     await db.query(
       'UPDATE students SET index_no = $1, first_name = $2, last_name = $3, grade = $4, parent_id = $5, class_id = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7',
@@ -362,10 +359,10 @@ router.post('/my-children/add', requireAuth, requireApprovedParent, async (req, 
     const { index_no, first_name, last_name, grade, class_id } = req.body;
     const parentId = req.session.user.id;
     
-    if (!index_no || !first_name || !last_name || !grade) {
+    if (!index_no || !first_name || !last_name || !grade || !class_id) {
       return res.render('students/add-child', { 
         user: req.session.user,
-        error: 'All fields except class are required',
+        error: 'All fields are required',
         classes: []
       });
     }
@@ -380,8 +377,7 @@ router.post('/my-children/add', requireAuth, requireApprovedParent, async (req, 
       });
     }
     
-    // Convert empty string to null for class_id
-    const classId = class_id === '' ? null : parseInt(class_id);
+    const classId = parseInt(class_id);
     
     const result = await db.query(
       'INSERT INTO students (index_no, first_name, last_name, grade, parent_id, class_id, is_approved) VALUES ($1, $2, $3, $4, $5, $6, FALSE) RETURNING *',
@@ -435,8 +431,8 @@ router.post('/my-children/:id/edit', requireAuth, requireApprovedParent, async (
     const parentId = req.session.user.id;
     const { index_no, first_name, last_name, grade, class_id } = req.body;
     
-    if (!index_no || !first_name || !last_name || !grade) {
-      return res.status(400).render('error', { message: 'All fields except class are required' });
+    if (!index_no || !first_name || !last_name || !grade || !class_id) {
+      return res.status(400).render('error', { message: 'All fields are required' });
     }
     
     // Check if student exists and belongs to this parent
@@ -451,8 +447,7 @@ router.post('/my-children/:id/edit', requireAuth, requireApprovedParent, async (
       return res.status(400).render('error', { message: 'Student with this index number already exists' });
     }
     
-    // Convert empty string to null for class_id
-    const classId = class_id === '' ? null : parseInt(class_id);
+    const classId = parseInt(class_id);
     
     await db.query(
       'UPDATE students SET index_no = $1, first_name = $2, last_name = $3, grade = $4, class_id = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 AND parent_id = $7',
@@ -483,6 +478,30 @@ router.post('/my-children/:id/delete', requireAuth, requireApprovedParent, async
   } catch (error) {
     console.error('Error deleting child:', error);
     res.status(500).render('error', { message: 'Error deleting child' });
+  }
+});
+
+// API endpoint to get classes by grade
+router.get('/api/classes/:grade', requireAuth, async (req, res) => {
+  try {
+    const grade = req.params.grade;
+    
+    // Validate grade
+    const validGrades = ['Form I', 'Form II', 'Form III', 'Form IV'];
+    if (!validGrades.includes(grade)) {
+      return res.status(400).json({ error: 'Invalid grade' });
+    }
+    
+    // Get classes for the specified grade
+    const classesResult = await db.query(
+      'SELECT id, name, grade, section FROM classes WHERE grade = $1 ORDER BY section',
+      [grade]
+    );
+    
+    res.json(classesResult.rows);
+  } catch (error) {
+    console.error('Error fetching classes by grade:', error);
+    res.status(500).json({ error: 'Error fetching classes' });
   }
 });
 
