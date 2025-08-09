@@ -148,9 +148,23 @@ app.get('/', async (req, res) => {
     
     const result = await db.query(query, params);
     
+    // Get user counts by role
+    const adminCountResult = await db.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+    const teacherCountResult = await db.query("SELECT COUNT(*) FROM users WHERE role = 'teacher'");
+    const parentCountResult = await db.query("SELECT COUNT(*) FROM users WHERE role = 'parent'");
+
+    const adminCount = parseInt(adminCountResult.rows[0].count, 10);
+    const teacherCount = parseInt(teacherCountResult.rows[0].count, 10);
+    const parentCount = parseInt(parentCountResult.rows[0].count, 10);
+    const totalUsers = adminCount + teacherCount + parentCount;
+
     res.render('index', { 
       posts: result.rows,
-      user: req.session.user 
+      user: req.session.user,
+      adminCount,
+      teacherCount,
+      parentCount,
+      totalUsers
     });
   } catch (error) {
     console.error('Error fetching posts:', error);

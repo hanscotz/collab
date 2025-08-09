@@ -303,6 +303,7 @@ router.post('/:id/edit', requireAuth, requireAdmin, async (req, res) => {
 
 // Delete post (admin only)
 router.post('/:id/delete', requireAuth, requireAdmin, async (req, res) => {
+  console.log('DELETE POST ROUTE HIT', req.params.id, req.session.user);
   try {
     const postId = req.params.id;
 
